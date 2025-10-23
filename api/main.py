@@ -9,6 +9,12 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# Create database tables on startup
+@app.on_event("startup")
+async def startup_event():
+    Base.metadata.create_all(bind=engine)
+    print("✅ Database tables created/verified")
+
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
@@ -16,7 +22,9 @@ app.add_middleware(
         "http://localhost:3000", 
         "http://localhost:3001",
         "http://first-in-dallas.local",
-        "https://first-in-dallas.local"
+        "https://first-in-dallas.local",
+        "https://wonderful-vibrancy-production.up.railway.app",
+        "*"  # Allow all origins in production (change to your domain when live)
     ],
     allow_credentials=True,
     allow_methods=["*"],
