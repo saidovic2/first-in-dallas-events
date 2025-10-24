@@ -110,6 +110,57 @@ async def sync_eventbrite_dallas(
         print(f"Error in sync_eventbrite_dallas: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.post("/ticketmaster/dallas")
+async def sync_ticketmaster_dallas(
+    background_tasks: BackgroundTasks,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Bulk sync Ticketmaster events from Dallas-Fort Worth area
+    Includes concerts, sports, theater, and more with affiliate tracking
+    """
+    try:
+        # Create a bulk sync task
+        task_data = {
+            "url": "bulk:ticketmaster:dallas",
+            "source_type": "ticketmaster_bulk",
+            "status": "queued"
+        }
+        
+        # Add to Redis queue
+        task_id = redis_client.incr("task_counter")
+        redis_client.lpush("extraction_queue", json.dumps({
+            "task_id": task_id,
+            **task_data
+        }))
+        
+        # Save task to database
+        from models.task import Task
+        task = Task(
+            url=task_data["url"],
+            source_type=task_data["source_type"],
+            status=task_data["status"]
+        )
+        db.add(task)
+        db.commit()
+        
+        return {
+            "message": "Ticketmaster bulk sync started",
+            "task_id": task.id,
+            "status": "queued",
+            "locations": ["Dallas", "Fort Worth", "Arlington", "Plano"],
+            "radius": "50 miles",
+            "categories": ["Music", "Sports", "Arts & Theatre", "Film"],
+            "note": "Events include affiliate tracking for commission earnings"
+        }
+    
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        print(f"Error in sync_ticketmaster_dallas: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.get("/status")
 async def get_sync_status(
     current_user: User = Depends(get_current_user),
@@ -129,6 +180,10 @@ async def get_sync_status(
         
         eventbrite_tasks = db.query(Task).filter(
             Task.source_type == "eventbrite_bulk"
+        ).order_by(desc(Task.created_at)).limit(5).all()
+        
+        ticketmaster_tasks = db.query(Task).filter(
+            Task.source_type == "ticketmaster_bulk"
         ).order_by(desc(Task.created_at)).limit(5).all()
         
         return {
@@ -151,6 +206,16 @@ async def get_sync_status(
                     "logs": task.logs
                 }
                 for task in eventbrite_tasks
+            ],
+            "ticketmaster": [
+                {
+                    "id": task.id,
+                    "status": task.status,
+                    "created_at": task.created_at.isoformat(),
+                    "completed_at": task.completed_at.isoformat() if task.completed_at else None,
+                    "logs": task.logs
+                }
+                for task in ticketmaster_tasks
             ]
         }
     
