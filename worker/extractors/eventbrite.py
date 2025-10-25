@@ -214,6 +214,9 @@ def parse_eventbrite_event(data):
         if logo:
             image_url = logo.get('original', {}).get('url')
         
+        # Detect category
+        category = detect_category_from_eventbrite(data, title, description or '')
+        
         event = {
             'title': title,
             'description': description,
@@ -225,7 +228,8 @@ def parse_eventbrite_event(data):
             'price_tier': price_tier,
             'price_amount': price_amount,
             'image_url': image_url,
-            'source_url': event_url
+            'source_url': event_url,
+            'category': category  # Add category to event data
         }
         
         return event
