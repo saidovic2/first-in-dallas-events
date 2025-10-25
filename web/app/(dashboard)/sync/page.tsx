@@ -66,10 +66,11 @@ export default function BulkSyncPage() {
       } else {
         throw new Error('Failed to start sync')
       }
-    } catch (error) {
+    } catch (error: any) {
+      const errorMsg = error?.message || 'Unknown error'
       setMessage({
         type: 'error',
-        text: '❌ Error starting Facebook sync. Please try again.'
+        text: `❌ Error starting Facebook sync: ${errorMsg}. Check that your Apify API token is set.`
       })
     } finally {
       setLoading(prev => ({ ...prev, facebook: false }))
@@ -147,10 +148,11 @@ export default function BulkSyncPage() {
       } else {
         throw new Error('Failed to start sync')
       }
-    } catch (error) {
+    } catch (error: any) {
+      const errorMsg = error?.message || 'Unknown error'
       setMessage({
         type: 'error',
-        text: '❌ Error starting Eventbrite sync. Please try again.'
+        text: `❌ Error starting Eventbrite sync: ${errorMsg}. Check that your API token is set.`
       })
       setLoading(prev => ({ ...prev, eventbrite: false }))
     }
@@ -264,10 +266,32 @@ export default function BulkSyncPage() {
                 </div>
               )}
               
-              {activeTask.logs && activeTask.logs.length > 0 && (
-                <div className="mt-3 p-3 bg-gray-900 rounded-lg border border-gray-700">
-                  <p className="text-xs text-green-400 font-mono whitespace-pre-wrap">{activeTask.logs.slice(-300)}</p>
+              {activeTask.status === 'failed' && activeTask.error_message && (
+                <div className="bg-red-50 border-2 border-red-300 rounded-lg p-4">
+                  <div className="flex items-start">
+                    <span className="text-2xl mr-3">❌</span>
+                    <div>
+                      <h4 className="font-semibold text-red-700 mb-2">Sync Failed</h4>
+                      <p className="text-sm text-red-600 font-mono bg-red-100 p-3 rounded">
+                        {activeTask.error_message}
+                      </p>
+                      <p className="text-xs text-red-500 mt-2">
+                        💡 Common issues: Missing API tokens, API rate limits, or network errors
+                      </p>
+                    </div>
+                  </div>
                 </div>
+              )}
+              
+              {activeTask.logs && activeTask.logs.length > 0 && (
+                <details className="mt-3">
+                  <summary className="cursor-pointer text-sm text-gray-600 hover:text-gray-900 mb-2">
+                    📋 View detailed logs
+                  </summary>
+                  <div className="p-3 bg-gray-900 rounded-lg border border-gray-700">
+                    <p className="text-xs text-green-400 font-mono whitespace-pre-wrap">{activeTask.logs.slice(-500)}</p>
+                  </div>
+                </details>
               )}
             </div>
           </div>
