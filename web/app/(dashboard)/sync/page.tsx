@@ -99,7 +99,7 @@ export default function BulkSyncPage() {
         if (task.status === 'completed') {
           setMessage({
             type: 'success',
-            text: `✅ Sync completed! Found ${task.events_extracted} events from 20 organizers.`
+            text: `🎉 Sync completed successfully! Imported ${task.events_extracted || 0} new events. Refresh the events page to see them.`
           })
         } else {
           setMessage({
@@ -108,7 +108,7 @@ export default function BulkSyncPage() {
           })
         }
         
-        setTimeout(() => setActiveTask(null), 5000)
+        setTimeout(() => setActiveTask(null), 15000)  // Keep visible for 15 seconds after completion
         fetchSyncStatus()
       }
     }
@@ -137,9 +137,9 @@ export default function BulkSyncPage() {
           text: `🔄 Sync started! Processing 20 organizers...`
         })
         
-        // Start polling for task status
+        // Start polling for task status (every 3 seconds)
         if (data.task_id) {
-          const interval = setInterval(() => pollTaskStatus(data.task_id), 2000)
+          const interval = setInterval(() => pollTaskStatus(data.task_id), 3000)
           setPollingInterval(interval)
         }
         
@@ -229,18 +229,44 @@ export default function BulkSyncPage() {
               </div>
             )}
             
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
+            {/* Progress Bar */}
+            {activeTask.status === 'running' && (
+              <div className="mb-4">
+                <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                  <div 
+                    className="bg-blue-600 h-3 rounded-full transition-all duration-500 animate-pulse"
+                    style={{ width: '100%' }}
+                  ></div>
+                </div>
+              </div>
+            )}
+            
+            <div className="space-y-3 text-sm">
+              <div className="flex justify-between items-center">
                 <span className="text-gray-600">Task ID:</span>
-                <span className="font-mono text-gray-900">#{activeTask.id}</span>
+                <span className="font-mono text-gray-900 font-semibold">#{activeTask.id}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Events Found:</span>
-                <span className="font-bold text-blue-600 text-lg">{activeTask.events_extracted || 0}</span>
+              
+              <div className="flex justify-between items-center bg-gradient-to-r from-blue-50 to-green-50 p-3 rounded-lg">
+                <span className="text-gray-700 font-semibold">📊 Events Found:</span>
+                <span className="font-bold text-blue-600 text-2xl">{activeTask.events_extracted || 0}</span>
               </div>
-              {activeTask.logs && (
-                <div className="mt-3 p-3 bg-gray-50 rounded border border-gray-200">
-                  <p className="text-xs text-gray-600 font-mono whitespace-pre-wrap">{activeTask.logs.slice(-200)}</p>
+              
+              {activeTask.status === 'running' && (
+                <div className="text-center text-gray-600 animate-pulse">
+                  <p>⏳ Processing organizers... Check back in 30-60 seconds</p>
+                </div>
+              )}
+              
+              {activeTask.status === 'completed' && (
+                <div className="text-center text-green-600 font-semibold bg-green-50 p-3 rounded-lg">
+                  ✅ Sync completed! {activeTask.events_extracted || 0} events imported
+                </div>
+              )}
+              
+              {activeTask.logs && activeTask.logs.length > 0 && (
+                <div className="mt-3 p-3 bg-gray-900 rounded-lg border border-gray-700">
+                  <p className="text-xs text-green-400 font-mono whitespace-pre-wrap">{activeTask.logs.slice(-300)}</p>
                 </div>
               )}
             </div>
