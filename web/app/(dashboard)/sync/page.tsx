@@ -24,7 +24,8 @@ export default function BulkSyncPage() {
   const fetchSyncStatus = async () => {
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch('http://localhost:8001/api/sync/status', {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001'
+      const response = await fetch(`${apiUrl}/api/sync/status`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -45,7 +46,8 @@ export default function BulkSyncPage() {
     
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch('http://localhost:8001/api/sync/facebook/dallas', {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001'
+      const response = await fetch(`${apiUrl}/api/sync/facebook/dallas`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -76,7 +78,8 @@ export default function BulkSyncPage() {
 
   const pollTaskStatus = async (taskId: number) => {
     const token = localStorage.getItem('token')
-    const response = await fetch(`http://localhost:8001/api/tasks/${taskId}`, {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001'
+    const response = await fetch(`${apiUrl}/api/tasks/${taskId}`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -118,7 +121,8 @@ export default function BulkSyncPage() {
     
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch('http://localhost:8001/api/sync/eventbrite/dallas', {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001'
+      const response = await fetch(`${apiUrl}/api/sync/eventbrite/dallas`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
