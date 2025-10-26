@@ -127,26 +127,67 @@ class EventsCMSDirectory {
     public function display_events_directory($atts) {
         // Parse shortcode attributes
         $atts = shortcode_atts(array(
-            'limit' => 20,
-            'city' => '',
-            'category' => '',
             'status' => 'PUBLISHED',
-            'source_type' => '',
+            'show_filters' => 'yes',
         ), $atts);
         
-        // Fetch events from API
-        $events = $this->fetch_events($atts);
+        // Get filter values from URL
+        $search = isset($_GET['search']) ? sanitize_text_field($_GET['search']) : '';
+        $city = isset($_GET['city']) ? sanitize_text_field($_GET['city']) : '';
+        $date = isset($_GET['date']) ? sanitize_text_field($_GET['date']) : '';
+        $price_tier = isset($_GET['price_tier']) ? sanitize_text_field($_GET['price_tier']) : '';
+        $current_page = isset($_GET['page_num']) ? max(1, intval($_GET['page_num'])) : 1;
         
-        if (is_wp_error($events)) {
+        // Build params for API
+        $params = array(
+            'status' => $atts['status'],
+            'search' => $search,
+            'city' => $city,
+            'price_tier' => $price_tier,
+        );
+        
+        // Add date filter if specified
+        if (!empty($date)) {
+            $start_of_day = date('Y-m-d 00:00:00', strtotime($date));
+            $end_of_day = date('Y-m-d 23:59:59', strtotime($date));
+            $params['start_date'] = date('c', strtotime($start_of_day));
+            $params['end_date'] = date('c', strtotime($end_of_day));
+        }
+        
+        // Fetch all matching events from API
+        $all_events = $this->fetch_events($params);
+        
+        if (is_wp_error($all_events)) {
             return '<p class="events-error">Unable to load events. Please try again later.</p>';
         }
         
-        if (empty($events)) {
-            return '<p class="events-empty">No events found.</p>';
-        }
+        // Pagination
+        $per_page = 20;
+        $total_events = count($all_events);
+        $total_pages = ceil($total_events / $per_page);
+        $offset = ($current_page - 1) * $per_page;
+        $events = array_slice($all_events, $offset, $per_page);
+        
+        // Get available cities for filter
+        $cities = $this->get_cities();
         
         // Generate HTML output
-        return $this->generate_events_html($events);
+        ob_start();
+        
+        // Show filters if enabled
+        if ($atts['show_filters'] === 'yes') {
+            echo $this->generate_filters_html($search, $city, $date, $price_tier, $cities);
+        }
+        
+        if (empty($events)) {
+            $message = !empty($date) ? 'No events found for this day. Try another date.' : 'No events found.';
+            echo '<p class="events-empty">' . esc_html($message) . '</p>';
+        } else {
+            echo $this->generate_events_html($events);
+            echo $this->generate_pagination_html($current_page, $total_pages, $total_events, $search, $city, $date, $price_tier);
+        }
+        
+        return ob_get_clean();
     }
     
     /**
@@ -155,24 +196,31 @@ class EventsCMSDirectory {
     private function fetch_events($params) {
         // Build query parameters
         $query_params = array(
-            'limit' => $params['limit'],
-            'skip' => 0,
+            'limit' => 1000,
         );
-        
-        if (!empty($params['city'])) {
-            $query_params['city'] = $params['city'];
-        }
-        
-        if (!empty($params['category'])) {
-            $query_params['category'] = $params['category'];
-        }
         
         if (!empty($params['status'])) {
             $query_params['status'] = $params['status'];
         }
         
-        if (!empty($params['source_type'])) {
-            $query_params['source_type'] = $params['source_type'];
+        if (!empty($params['city'])) {
+            $query_params['city'] = $params['city'];
+        }
+        
+        if (!empty($params['search'])) {
+            $query_params['search'] = $params['search'];
+        }
+        
+        if (!empty($params['price_tier'])) {
+            $query_params['price_tier'] = $params['price_tier'];
+        }
+        
+        if (!empty($params['start_date'])) {
+            $query_params['start_date'] = $params['start_date'];
+        }
+        
+        if (!empty($params['end_date'])) {
+            $query_params['end_date'] = $params['end_date'];
         }
         
         $url = add_query_arg($query_params, $this->api_url . '/events');
@@ -192,12 +240,185 @@ class EventsCMSDirectory {
         $body = wp_remote_retrieve_body($response);
         $data = json_decode($body, true);
         
-        // API returns array directly, not wrapped in "events" key
-        if (is_array($data) && !isset($data['events'])) {
+        // API returns array directly
+        if (is_array($data)) {
             return $data;
         }
         
-        return isset($data['events']) ? $data['events'] : array();
+        return array();
+    }
+    
+    /**
+     * Get list of cities from API
+     */
+    private function get_cities() {
+        $url = $this->api_url . '/events/cities/list';
+        
+        $response = wp_remote_get($url, array(
+            'timeout' => 10,
+            'headers' => array(
+                'Accept' => 'application/json',
+            ),
+        ));
+        
+        if (is_wp_error($response)) {
+            return array();
+        }
+        
+        $body = wp_remote_retrieve_body($response);
+        $data = json_decode($body, true);
+        
+        return is_array($data) ? $data : array();
+    }
+    
+    /**
+     * Generate filters HTML
+     */
+    private function generate_filters_html($search, $city, $date, $price_tier, $cities) {
+        // Get current URL without query params
+        $base_url = strtok($_SERVER['REQUEST_URI'], '?');
+        
+        ob_start();
+        ?>
+        <div class="events-filters">
+            <form method="get" action="<?php echo esc_url($base_url); ?>" class="events-filter-form">
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label for="events-search">Search</label>
+                        <input 
+                            type="text" 
+                            id="events-search" 
+                            name="search" 
+                            value="<?php echo esc_attr($search); ?>" 
+                            placeholder="Search events..."
+                            class="filter-input"
+                        />
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="events-city">City</label>
+                        <select id="events-city" name="city" class="filter-select">
+                            <option value="">All Cities</option>
+                            <?php foreach ($cities as $city_option): ?>
+                                <option value="<?php echo esc_attr($city_option); ?>" <?php selected($city, $city_option); ?>>
+                                    <?php echo esc_html($city_option); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="events-date">Date</label>
+                        <input 
+                            type="date" 
+                            id="events-date" 
+                            name="date" 
+                            value="<?php echo esc_attr($date); ?>" 
+                            class="filter-input"
+                        />
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="events-price">Price</label>
+                        <select id="events-price" name="price_tier" class="filter-select">
+                            <option value="">All Prices</option>
+                            <option value="free" <?php selected($price_tier, 'free'); ?>>Free</option>
+                            <option value="paid" <?php selected($price_tier, 'paid'); ?>>Paid</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="filter-actions">
+                    <button type="submit" class="filter-btn filter-btn-primary">Apply Filters</button>
+                    <a href="<?php echo esc_url($base_url); ?>" class="filter-btn filter-btn-secondary">Clear</a>
+                </div>
+            </form>
+        </div>
+        <?php
+        return ob_get_clean();
+    }
+    
+    /**
+     * Generate pagination HTML
+     */
+    private function generate_pagination_html($current_page, $total_pages, $total_events, $search, $city, $date, $price_tier) {
+        if ($total_pages <= 1) {
+            return '';
+        }
+        
+        // Build query string
+        $query_params = array();
+        if (!empty($search)) $query_params['search'] = $search;
+        if (!empty($city)) $query_params['city'] = $city;
+        if (!empty($date)) $query_params['date'] = $date;
+        if (!empty($price_tier)) $query_params['price_tier'] = $price_tier;
+        
+        $base_url = strtok($_SERVER['REQUEST_URI'], '?');
+        
+        ob_start();
+        ?>
+        <div class="events-pagination">
+            <div class="pagination-info">
+                Showing <?php echo (($current_page - 1) * 20) + 1; ?> to <?php echo min($current_page * 20, $total_events); ?> of <?php echo $total_events; ?> events
+            </div>
+            <div class="pagination-buttons">
+                <?php if ($current_page > 1): ?>
+                    <a href="<?php echo esc_url(add_query_arg(array_merge($query_params, array('page_num' => 1)), $base_url)); ?>" class="page-btn page-first" title="First page">&laquo;</a>
+                    <a href="<?php echo esc_url(add_query_arg(array_merge($query_params, array('page_num' => $current_page - 1)), $base_url)); ?>" class="page-btn page-prev" title="Previous page">&lsaquo;</a>
+                <?php else: ?>
+                    <span class="page-btn page-disabled">&laquo;</span>
+                    <span class="page-btn page-disabled">&lsaquo;</span>
+                <?php endif; ?>
+                
+                <?php
+                // Generate page numbers
+                $pages_to_show = array();
+                if ($total_pages <= 7) {
+                    for ($i = 1; $i <= $total_pages; $i++) {
+                        $pages_to_show[] = $i;
+                    }
+                } else {
+                    if ($current_page <= 3) {
+                        for ($i = 1; $i <= 4; $i++) $pages_to_show[] = $i;
+                        $pages_to_show[] = '...';
+                        $pages_to_show[] = $total_pages;
+                    } elseif ($current_page >= $total_pages - 2) {
+                        $pages_to_show[] = 1;
+                        $pages_to_show[] = '...';
+                        for ($i = $total_pages - 3; $i <= $total_pages; $i++) $pages_to_show[] = $i;
+                    } else {
+                        $pages_to_show[] = 1;
+                        $pages_to_show[] = '...';
+                        $pages_to_show[] = $current_page - 1;
+                        $pages_to_show[] = $current_page;
+                        $pages_to_show[] = $current_page + 1;
+                        $pages_to_show[] = '...';
+                        $pages_to_show[] = $total_pages;
+                    }
+                }
+                
+                foreach ($pages_to_show as $page):
+                    if ($page === '...'):
+                        ?><span class="page-ellipsis">...</span><?php
+                    elseif ($page == $current_page):
+                        ?><span class="page-btn page-current"><?php echo $page; ?></span><?php
+                    else:
+                        ?><a href="<?php echo esc_url(add_query_arg(array_merge($query_params, array('page_num' => $page)), $base_url)); ?>" class="page-btn"><?php echo $page; ?></a><?php
+                    endif;
+                endforeach;
+                ?>
+                
+                <?php if ($current_page < $total_pages): ?>
+                    <a href="<?php echo esc_url(add_query_arg(array_merge($query_params, array('page_num' => $current_page + 1)), $base_url)); ?>" class="page-btn page-next" title="Next page">&rsaquo;</a>
+                    <a href="<?php echo esc_url(add_query_arg(array_merge($query_params, array('page_num' => $total_pages)), $base_url)); ?>" class="page-btn page-last" title="Last page">&raquo;</a>
+                <?php else: ?>
+                    <span class="page-btn page-disabled">&rsaquo;</span>
+                    <span class="page-btn page-disabled">&raquo;</span>
+                <?php endif; ?>
+            </div>
+        </div>
+        <?php
+        return ob_get_clean();
     }
     
     /**
@@ -243,12 +464,6 @@ class EventsCMSDirectory {
                                 <?php if (!empty($event['city'])): ?>
                                     <div class="event-city">
                                         <?php echo esc_html($event['city']); ?>
-                                    </div>
-                                <?php endif; ?>
-                                
-                                <?php if (!empty($event['category'])): ?>
-                                    <div class="event-category">
-                                        <span class="category-badge"><?php echo esc_html($event['category']); ?></span>
                                     </div>
                                 <?php endif; ?>
                             </div>
