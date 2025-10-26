@@ -1,102 +1,108 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { eventsApi } from '@/lib/api'
 import { formatDateTime } from '@/lib/utils'
-import { Calendar, MapPin, DollarSign, Grid, List, Search } from 'lucide-react'
+import { Calendar, MapPin, DollarSign, Grid, List, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react'
 import Image from 'next/image'
+import { format } from 'date-fns'
 
 export default function DirectoryPage() {
-  const [events, setEvents] = useState<any[]>([])
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  
+  const [allEvents, setAllEvents] = useState<any[]>([])
+  const [displayedEvents, setDisplayedEvents] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const itemsPerPage = 20
+  
+  // Get today's date in YYYY-MM-DD format
+  const getTodayDate = () => {
+    const today = new Date()
+    return format(today, 'yyyy-MM-dd')
+  }
+  
   const [filters, setFilters] = useState({
     search: '',
     city: '',
     price_tier: '',
-    date_range: ''
+    date: getTodayDate()
   })
   const [cities, setCities] = useState<string[]>([])
-  const [categories, setCategories] = useState<string[]>([])
 
   useEffect(() => {
-    loadEvents()
+    // Load filters from URL on mount
+    const search = searchParams.get('search') || ''
+    const city = searchParams.get('city') || ''
+    const price_tier = searchParams.get('price_tier') || ''
+    const date = searchParams.get('date') || getTodayDate()
+    const page = parseInt(searchParams.get('page') || '1')
+    
+    setFilters({ search, city, price_tier, date })
+    setCurrentPage(page)
     loadFilters()
   }, [])
-
-  const getDateRange = (range: string) => {
-    const now = new Date()
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    
-    switch (range) {
-      case 'today':
-        return {
-          start: today.toISOString(),
-          end: new Date(today.getTime() + 24 * 60 * 60 * 1000).toISOString()
-        }
-      case 'tomorrow':
-        const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000)
-        return {
-          start: tomorrow.toISOString(),
-          end: new Date(tomorrow.getTime() + 24 * 60 * 60 * 1000).toISOString()
-        }
-      case 'this_week':
-        const dayOfWeek = now.getDay()
-        const startOfWeek = new Date(today.getTime() - dayOfWeek * 24 * 60 * 60 * 1000)
-        const endOfWeek = new Date(startOfWeek.getTime() + 7 * 24 * 60 * 60 * 1000)
-        return {
-          start: startOfWeek.toISOString(),
-          end: endOfWeek.toISOString()
-        }
-      case 'this_weekend':
-        const friday = new Date(today.getTime() + (5 - dayOfWeek) * 24 * 60 * 60 * 1000)
-        const monday = new Date(friday.getTime() + 3 * 24 * 60 * 60 * 1000)
-        return {
-          start: friday.toISOString(),
-          end: monday.toISOString()
-        }
-      case 'next_week':
-        const nextWeekStart = new Date(today.getTime() + (7 - dayOfWeek) * 24 * 60 * 60 * 1000)
-        const nextWeekEnd = new Date(nextWeekStart.getTime() + 7 * 24 * 60 * 60 * 1000)
-        return {
-          start: nextWeekStart.toISOString(),
-          end: nextWeekEnd.toISOString()
-        }
-      case 'this_month':
-        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59)
-        return {
-          start: startOfMonth.toISOString(),
-          end: endOfMonth.toISOString()
-        }
-      default:
-        return null
+  
+  useEffect(() => {
+    if (cities.length > 0) {
+      loadEvents()
     }
+  }, [filters, currentPage])
+
+  const updateURL = (newFilters: any, page: number) => {
+    const params = new URLSearchParams()
+    if (newFilters.search) params.set('search', newFilters.search)
+    if (newFilters.city) params.set('city', newFilters.city)
+    if (newFilters.price_tier) params.set('price_tier', newFilters.price_tier)
+    if (newFilters.date) params.set('date', newFilters.date)
+    if (page > 1) params.set('page', page.toString())
+    
+    router.push(`?${params.toString()}`, { scroll: false })
   }
 
   const loadEvents = async () => {
+    setLoading(true)
     try {
-      const params: any = { status: 'PUBLISHED' }
+      const params: any = { status: 'PUBLISHED', limit: 1000 }
       if (filters.search) params.search = filters.search
       if (filters.city) params.city = filters.city
       if (filters.price_tier) params.price_tier = filters.price_tier
       
-      if (filters.date_range) {
-        const dateRange = getDateRange(filters.date_range)
-        if (dateRange) {
-          params.start_date = dateRange.start
-          params.end_date = dateRange.end
-        }
+      // If date is selected, filter by that specific day
+      if (filters.date) {
+        const selectedDate = new Date(filters.date)
+        const startOfDay = new Date(selectedDate.setHours(0, 0, 0, 0))
+        const endOfDay = new Date(selectedDate.setHours(23, 59, 59, 999))
+        params.start_date = startOfDay.toISOString()
+        params.end_date = endOfDay.toISOString()
       }
       
       const response = await eventsApi.list(params)
-      setEvents(response.data)
+      const events = response.data
+      setAllEvents(events)
+      
+      // Calculate pagination
+      const total = Math.ceil(events.length / itemsPerPage)
+      setTotalPages(total)
+      
+      // Get events for current page
+      const startIdx = (currentPage - 1) * itemsPerPage
+      const endIdx = startIdx + itemsPerPage
+      setDisplayedEvents(events.slice(startIdx, endIdx))
+      
+      updateURL(filters, currentPage)
     } catch (error) {
       console.error('Failed to load events:', error)
+      setAllEvents([])
+      setDisplayedEvents([])
     } finally {
       setLoading(false)
     }
@@ -104,28 +110,64 @@ export default function DirectoryPage() {
 
   const loadFilters = async () => {
     try {
-      const [citiesRes, categoriesRes] = await Promise.all([
-        eventsApi.getCities(),
-        eventsApi.getCategories()
-      ])
+      const citiesRes = await eventsApi.getCities()
       setCities(citiesRes.data)
-      setCategories(categoriesRes.data)
     } catch (error) {
       console.error('Failed to load filters:', error)
     }
   }
 
   const handleFilterChange = (key: string, value: string) => {
-    setFilters({ ...filters, [key]: value })
+    const newFilters = { ...filters, [key]: value }
+    setFilters(newFilters)
+    setCurrentPage(1) // Reset to page 1 when filter changes
   }
 
   const applyFilters = () => {
+    setCurrentPage(1)
     loadEvents()
   }
 
   const clearFilters = () => {
-    setFilters({ search: '', city: '', price_tier: '', date_range: '' })
-    setTimeout(loadEvents, 100)
+    const newFilters = { search: '', city: '', price_tier: '', date: getTodayDate() }
+    setFilters(newFilters)
+    setCurrentPage(1)
+  }
+  
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+  
+  const generatePageNumbers = () => {
+    const pages = []
+    const maxVisible = 5
+    
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i)
+      }
+    } else {
+      if (currentPage <= 3) {
+        for (let i = 1; i <= 4; i++) pages.push(i)
+        pages.push('...')
+        pages.push(totalPages)
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1)
+        pages.push('...')
+        for (let i = totalPages - 3; i <= totalPages; i++) pages.push(i)
+      } else {
+        pages.push(1)
+        pages.push('...')
+        pages.push(currentPage - 1)
+        pages.push(currentPage)
+        pages.push(currentPage + 1)
+        pages.push('...')
+        pages.push(totalPages)
+      }
+    }
+    
+    return pages
   }
 
   if (loading) {
@@ -150,8 +192,8 @@ export default function DirectoryPage() {
         {/* Filters */}
         <Card className="mb-8">
           <CardContent className="pt-6">
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-              <div className="md:col-span-2">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="md:col-span-1">
                 <Input
                   placeholder="Search events..."
                   value={filters.search}
@@ -159,38 +201,37 @@ export default function DirectoryPage() {
                   onKeyDown={(e) => e.key === 'Enter' && applyFilters()}
                 />
               </div>
-              <select
-                className="px-3 py-2 border rounded-md"
-                value={filters.date_range}
-                onChange={(e) => handleFilterChange('date_range', e.target.value)}
-              >
-                <option value="">All Dates</option>
-                <option value="today">📅 Today</option>
-                <option value="tomorrow">🌅 Tomorrow</option>
-                <option value="this_weekend">🎉 This Weekend</option>
-                <option value="this_week">📆 This Week</option>
-                <option value="next_week">➡️ Next Week</option>
-                <option value="this_month">📋 This Month</option>
-              </select>
-              <select
-                className="px-3 py-2 border rounded-md"
-                value={filters.city}
-                onChange={(e) => handleFilterChange('city', e.target.value)}
-              >
-                <option value="">All Cities</option>
-                {cities.map(city => (
-                  <option key={city} value={city}>{city}</option>
-                ))}
-              </select>
-              <select
-                className="px-3 py-2 border rounded-md"
-                value={filters.price_tier}
-                onChange={(e) => handleFilterChange('price_tier', e.target.value)}
-              >
-                <option value="">All Prices</option>
-                <option value="free">Free</option>
-                <option value="paid">Paid</option>
-              </select>
+              <div>
+                <select
+                  className="w-full px-3 py-2 border rounded-md"
+                  value={filters.city}
+                  onChange={(e) => handleFilterChange('city', e.target.value)}
+                >
+                  <option value="">All Cities</option>
+                  {cities.map(city => (
+                    <option key={city} value={city}>{city}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <Input
+                  type="date"
+                  value={filters.date}
+                  onChange={(e) => handleFilterChange('date', e.target.value)}
+                  className="w-full"
+                />
+              </div>
+              <div>
+                <select
+                  className="w-full px-3 py-2 border rounded-md"
+                  value={filters.price_tier}
+                  onChange={(e) => handleFilterChange('price_tier', e.target.value)}
+                >
+                  <option value="">All Prices</option>
+                  <option value="free">Free</option>
+                  <option value="paid">Paid</option>
+                </select>
+              </div>
             </div>
             <div className="flex justify-between items-center mt-4">
               <div className="flex gap-2">
@@ -223,15 +264,19 @@ export default function DirectoryPage() {
         </Card>
 
         {/* Events */}
-        {events.length === 0 ? (
+        {displayedEvents.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center">
-              <p className="text-gray-500">No events found</p>
+              <p className="text-gray-500 text-lg">
+                {filters.date 
+                  ? "No events found for this day. Try another date." 
+                  : "No events found"}
+              </p>
             </CardContent>
           </Card>
         ) : viewMode === 'grid' ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {events.map((event) => (
+            {displayedEvents.map((event) => (
               <Card key={event.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                 {event.image_url && (
                   <div className="relative h-48 w-full">
@@ -286,7 +331,7 @@ export default function DirectoryPage() {
           </div>
         ) : (
           <div className="space-y-4">
-            {events.map((event) => (
+            {displayedEvents.map((event) => (
               <Card key={event.id}>
                 <CardContent className="p-6">
                   <div className="flex gap-6">
@@ -337,6 +382,78 @@ export default function DirectoryPage() {
               </Card>
             ))}
           </div>
+        )}
+        
+        {/* Pagination */}
+        {totalPages > 1 && displayedEvents.length > 0 && (
+          <Card className="mt-8">
+            <CardContent className="py-4">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-600">
+                  Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, allEvents.length)} of {allEvents.length} events
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => handlePageChange(1)}
+                    disabled={currentPage === 1}
+                    title="First page"
+                  >
+                    <ChevronsLeft className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    title="Previous page"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  
+                  <div className="flex gap-1">
+                    {generatePageNumbers().map((page, idx) => (
+                      page === '...' ? (
+                        <span key={`ellipsis-${idx}`} className="px-3 py-2 text-gray-500">
+                          ...
+                        </span>
+                      ) : (
+                        <Button
+                          key={page}
+                          variant={currentPage === page ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => handlePageChange(page as number)}
+                          className="min-w-[40px]"
+                        >
+                          {page}
+                        </Button>
+                      )
+                    ))}
+                  </div>
+                  
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    title="Next page"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => handlePageChange(totalPages)}
+                    disabled={currentPage === totalPages}
+                    title="Last page"
+                  >
+                    <ChevronsRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         )}
       </div>
     </div>
