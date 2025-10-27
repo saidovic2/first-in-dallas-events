@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Calendar, LayoutDashboard, Plus, List, Globe, LogOut, RefreshCw } from 'lucide-react'
+import { Calendar, LayoutDashboard, Plus, List, Globe, LogOut, RefreshCw, FileText, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 
@@ -10,6 +10,8 @@ const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Add Events', href: '/add', icon: Plus },
   { name: 'Bulk Sync', href: '/sync', icon: RefreshCw },
+  { name: 'Organizer Submissions', href: '/submissions', icon: FileText },
+  { name: 'Organizers Management', href: '/organizers', icon: Users },
   { name: 'Manage Events', href: '/events', icon: List },
   { name: 'Public Directory', href: '/directory', icon: Globe },
 ]

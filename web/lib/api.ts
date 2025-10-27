@@ -40,6 +40,7 @@ export const authApi = {
 export const eventsApi = {
   list: (params?: any) => api.get('/api/events/', { params }),
   get: (id: number) => api.get(`/api/events/${id}`),
+  create: (data: any) => api.post('/api/events/', data),
   update: (id: number, data: any) => api.put(`/api/events/${id}`, data),
   delete: (id: number) => api.delete(`/api/events/${id}`),
   publish: (id: number) => api.post(`/api/events/${id}/publish`),

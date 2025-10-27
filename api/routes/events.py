@@ -4,10 +4,11 @@ from sqlalchemy import or_, and_
 from typing import List, Optional
 from datetime import datetime
 from pydantic import BaseModel
+import hashlib
 from database import get_db
 from models.event import Event
 from models.user import User
-from schemas.event import EventResponse, EventUpdate
+from schemas.event import EventResponse, EventUpdate, EventCreate
 from utils.auth import get_current_user
 from utils.wordpress import publish_to_wordpress
 
@@ -60,6 +61,60 @@ async def list_events(
     events = query.offset(offset).limit(limit).all()
     
     return [EventResponse.model_validate(event) for event in events]
+
+@router.post("/", response_model=EventResponse, status_code=201)
+async def create_event(
+    title: str = Body(...),
+    primary_url: str = Body(""),
+    venue: str = Body(""),
+    address: str = Body(""),
+    city: str = Body(...),
+    start_at: datetime = Body(...),
+    end_at: Optional[datetime] = Body(None),
+    price_amount: Optional[float] = Body(None),
+    price_tier: str = Body("FREE"),
+    image_url: str = Body(""),
+    description: str = Body(""),
+    status: str = Body("PUBLISHED"),
+    category: str = Body("STANDARD"),
+    source_type: str = Body("ORGANIZER_SUBMISSION"),
+    db: Session = Depends(get_db)
+):
+    """Create a new event (typically from organizer submissions)"""
+    
+    # Generate fid_hash (unique identifier)
+    hash_string = f"{title}{city}{start_at.isoformat()}"
+    fid_hash = hashlib.md5(hash_string.encode()).hexdigest()
+    
+    # Check if event with same hash already exists
+    existing = db.query(Event).filter(Event.fid_hash == fid_hash).first()
+    if existing:
+        raise HTTPException(status_code=409, detail="Event already exists")
+    
+    # Create new event
+    new_event = Event(
+        title=title,
+        description=description,
+        start_at=start_at,
+        end_at=end_at,
+        venue=venue if venue else None,
+        address=address if address else None,
+        city=city,
+        price_tier=price_tier,
+        price_amount=price_amount,
+        image_url=image_url if image_url else None,
+        source_url=primary_url if primary_url else f"organizer-{fid_hash}",
+        source_type=source_type,
+        category=category,
+        fid_hash=fid_hash,
+        status=status
+    )
+    
+    db.add(new_event)
+    db.commit()
+    db.refresh(new_event)
+    
+    return EventResponse.model_validate(new_event)
 
 @router.get("/{event_id}", response_model=EventResponse)
 async def get_event(event_id: int, db: Session = Depends(get_db)):
