@@ -26,11 +26,18 @@ async def list_events(
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
     search: Optional[str] = None,
+    include_past: bool = False,  # New parameter to include past events
     limit: int = Query(500, le=1000),
     offset: int = 0,
     db: Session = Depends(get_db)
 ):
     query = db.query(Event)
+    
+    # AUTOMATICALLY exclude past events (unless include_past=true for admin)
+    if not include_past:
+        from datetime import datetime, timezone
+        now = datetime.now(timezone.utc)
+        query = query.filter(Event.start_at >= now)
     
     # Apply filters
     if status:
@@ -54,7 +61,7 @@ async def list_events(
             )
         )
     
-    # Order by start date (upcoming events first)
+    # Order by start date (upcoming events first - closest dates at top)
     query = query.order_by(Event.start_at.asc())
     
     # Pagination
@@ -240,3 +247,34 @@ async def list_cities(db: Session = Depends(get_db)):
 async def list_categories(db: Session = Depends(get_db)):
     categories = db.query(Event.category).distinct().filter(Event.category.isnot(None)).all()
     return [cat[0] for cat in categories if cat[0]]
+
+@router.post("/cleanup/past-events")
+async def cleanup_past_events(
+    days_old: int = Query(7, description="Delete events older than X days after their start date"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Delete events that have already passed.
+    By default, deletes events that ended more than 7 days ago.
+    """
+    from datetime import datetime, timezone, timedelta
+    
+    # Calculate cutoff date (now - days_old)
+    cutoff_date = datetime.now(timezone.utc) - timedelta(days=days_old)
+    
+    # Find past events
+    past_events = db.query(Event).filter(Event.start_at < cutoff_date).all()
+    deleted_count = len(past_events)
+    
+    # Delete them
+    for event in past_events:
+        db.delete(event)
+    
+    db.commit()
+    
+    return {
+        "message": f"Deleted {deleted_count} past events",
+        "deleted_count": deleted_count,
+        "cutoff_date": cutoff_date.isoformat()
+    }

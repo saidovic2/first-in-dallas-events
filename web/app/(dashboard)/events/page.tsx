@@ -7,8 +7,9 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { eventsApi } from '@/lib/api'
 import { formatDateTime } from '@/lib/utils'
-import { Search, Edit, Trash2, ExternalLink, Upload, CheckSquare, Square } from 'lucide-react'
+import { Search, Edit, Trash2, ExternalLink, Upload, CheckSquare, Square, CalendarX } from 'lucide-react'
 import Image from 'next/image'
+import api from '@/lib/api'
 
 export default function EventsPage() {
   const [events, setEvents] = useState<any[]>([])
@@ -23,6 +24,7 @@ export default function EventsPage() {
   const [categories, setCategories] = useState<string[]>([])
   const [bulkActionLoading, setBulkActionLoading] = useState(false)
   const [eventCounts, setEventCounts] = useState({ draft: 0, published: 0, total: 0 })
+  const [cleanupLoading, setCleanupLoading] = useState(false)
 
   useEffect(() => {
     loadEvents()
@@ -86,6 +88,24 @@ export default function EventsPage() {
 
   const handleSearch = () => {
     loadEvents()
+  }
+
+  const handleCleanupPastEvents = async () => {
+    if (!confirm('Delete all past events (older than 7 days)? This action cannot be undone.')) return
+
+    setCleanupLoading(true)
+    try {
+      const response = await api.post('/api/events/cleanup/past-events?days_old=7')
+      const { deleted_count } = response.data
+      alert(`✅ Successfully deleted ${deleted_count} past events`)
+      loadEvents()
+      loadEventCounts()
+    } catch (error: any) {
+      console.error('Failed to cleanup:', error)
+      alert(`Failed to cleanup past events: ${error.response?.data?.detail || error.message}`)
+    } finally {
+      setCleanupLoading(false)
+    }
   }
 
   const handleDelete = async (id: number) => {
@@ -223,23 +243,45 @@ export default function EventsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Manage Events</h1>
-        <p className="text-gray-600 mt-1">Review, edit, and publish your events</p>
-        <div className="flex gap-4 mt-4">
-          <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-lg">
-            <span className="text-2xl font-bold text-blue-600">{eventCounts.total}</span>
-            <span className="text-sm text-gray-600">Total Events</span>
-          </div>
-          <div className="flex items-center gap-2 px-4 py-2 bg-orange-50 rounded-lg">
-            <span className="text-2xl font-bold text-orange-600">{eventCounts.draft}</span>
-            <span className="text-sm text-gray-600">Draft</span>
-          </div>
-          <div className="flex items-center gap-2 px-4 py-2 bg-green-50 rounded-lg">
-            <span className="text-2xl font-bold text-green-600">{eventCounts.published}</span>
-            <span className="text-sm text-gray-600">Published</span>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Manage Events</h1>
+          <p className="text-gray-600 mt-1">Review, edit, and publish your events</p>
+          <div className="flex gap-4 mt-4">
+            <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-lg">
+              <span className="text-2xl font-bold text-blue-600">{eventCounts.total}</span>
+              <span className="text-sm text-gray-600">Total Events</span>
+            </div>
+            <div className="flex items-center gap-2 px-4 py-2 bg-orange-50 rounded-lg">
+              <span className="text-2xl font-bold text-orange-600">{eventCounts.draft}</span>
+              <span className="text-sm text-gray-600">Draft</span>
+            </div>
+            <div className="flex items-center gap-2 px-4 py-2 bg-green-50 rounded-lg">
+              <span className="text-2xl font-bold text-green-600">{eventCounts.published}</span>
+              <span className="text-sm text-gray-600">Published</span>
+            </div>
           </div>
         </div>
+        
+        {/* Cleanup Button */}
+        <Button
+          onClick={handleCleanupPastEvents}
+          disabled={cleanupLoading}
+          variant="outline"
+          className="text-red-600 border-red-300 hover:bg-red-50"
+        >
+          {cleanupLoading ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600 mr-2"></div>
+              Cleaning...
+            </>
+          ) : (
+            <>
+              <CalendarX className="h-4 w-4 mr-2" />
+              Delete Past Events
+            </>
+          )}
+        </Button>
       </div>
 
       {/* Bulk Actions */}
