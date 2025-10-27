@@ -67,27 +67,31 @@ export default function SubmissionsPage() {
 
       if (fetchError) throw fetchError
 
-      // Create event in live directory via API
-      await eventsApi.create({
-        title: submission.title,
-        primary_url: submission.primary_url || '',
-        country: submission.country || 'USA',
-        venue: submission.venue || '',
-        address: submission.address || '',
-        city: submission.city,
-        state: submission.state || '',
-        zip_code: submission.zip_code || '',
-        start_at: submission.start_date,
-        end_at: submission.end_date || null,
-        price_amount: submission.price ? parseFloat(submission.price) : null,
-        price_tier: submission.price_tier?.toUpperCase() || 'FREE',
-        image_url: submission.image_url || '',
-        description: submission.description,
-        status: 'PUBLISHED',
-        category: submission.submission_type === 'paid' ? 'FEATURED' : 'STANDARD',
-        source_type: 'ORGANIZER_SUBMISSION',
-        format: submission.format?.toUpperCase() || 'IN_PERSON'
-      })
+      // Try to create event in live directory via API
+      try {
+        await eventsApi.create({
+          title: submission.title,
+          primary_url: submission.primary_url || '',
+          venue: submission.venue || '',
+          address: submission.address || '',
+          city: submission.city,
+          start_at: submission.start_date,
+          end_at: submission.end_date || null,
+          price_amount: submission.price ? parseFloat(submission.price) : null,
+          price_tier: submission.price_tier?.toUpperCase() || 'FREE',
+          image_url: submission.image_url || '',
+          description: submission.description,
+          status: 'PUBLISHED',
+          category: submission.submission_type === 'paid' ? 'FEATURED' : 'STANDARD',
+          source_type: 'ORGANIZER_SUBMISSION'
+        })
+      } catch (apiError: any) {
+        // If error is 409 (duplicate), that's okay - event already exists
+        if (apiError.response?.status !== 409) {
+          throw apiError
+        }
+        console.log('Event already exists in directory, updating submission status...')
+      }
 
       // Update submission status in Supabase
       const { error } = await supabase
@@ -104,7 +108,7 @@ export default function SubmissionsPage() {
       alert('✅ Event approved and published to live directory!')
     } catch (error: any) {
       console.error('Failed to approve:', error)
-      alert(`Failed to approve event: ${error.message || 'Unknown error'}`)
+      alert(`Failed to approve event: ${error.response?.data?.detail || error.message || 'Unknown error'}`)
     }
   }
 
