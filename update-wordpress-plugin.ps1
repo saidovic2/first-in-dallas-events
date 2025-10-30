@@ -22,19 +22,21 @@ Write-Host "Copying updated files..." -ForegroundColor Yellow
 try {
     Copy-Item -Path "$sourcePath\*" -Destination $destPath -Recurse -Force
     Write-Host ""
-    Write-Host "✓ Plugin updated successfully!" -ForegroundColor Green
+    Write-Host "Plugin updated successfully!" -ForegroundColor Green
     Write-Host ""
     Write-Host "Changes applied:" -ForegroundColor Cyan
-    Write-Host "  ✓ Removed Category filter" -ForegroundColor White
-    Write-Host "  ✓ Added Date Picker filter" -ForegroundColor White
-    Write-Host "  ✓ Added 20-per-page pagination" -ForegroundColor White
-    Write-Host "  ✓ Added URL query sync" -ForegroundColor White
-    Write-Host "  ✓ Updated empty state messages" -ForegroundColor White
+    Write-Host "  - Removed Category filter" -ForegroundColor White
+    Write-Host "  - Added Date Picker filter" -ForegroundColor White
+    Write-Host "  - Added 20-per-page pagination" -ForegroundColor White
+    Write-Host "  - Added URL query sync" -ForegroundColor White
+    Write-Host "  - Updated empty state messages" -ForegroundColor White
+    Write-Host "  - Added Upcoming Events sidebar widget" -ForegroundColor White
     Write-Host ""
     Write-Host "Next Steps:" -ForegroundColor Cyan
     Write-Host "  1. Go to your WordPress page with [events_directory]" -ForegroundColor White
     Write-Host "  2. Refresh the page (Ctrl + F5)" -ForegroundColor White
-    Write-Host "  3. You should see the new Date Picker and Pagination!" -ForegroundColor White
+    Write-Host "  3. Go to Appearance -> Widgets to add the 'Upcoming Events' widget" -ForegroundColor White
+    Write-Host "  4. Drag the widget to your sidebar or any widget area" -ForegroundColor White
     Write-Host ""
 } catch {
     Write-Host "ERROR: Failed to copy files" -ForegroundColor Red

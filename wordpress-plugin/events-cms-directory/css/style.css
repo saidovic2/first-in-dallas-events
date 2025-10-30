@@ -357,3 +357,133 @@
         flex-wrap: wrap;
     }
 }
+
+/* Widget Styles */
+.eventscms-widget-events {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.eventscms-widget-event {
+    display: flex;
+    gap: 12px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.eventscms-widget-event:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.eventscms-widget-event-image {
+    flex-shrink: 0;
+    width: 80px;
+    height: 80px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #f3f4f6;
+}
+
+.eventscms-widget-event-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.eventscms-widget-event-content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.eventscms-widget-event-title {
+    margin: 0;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.4;
+    color: #1f2937;
+}
+
+.eventscms-widget-event-title a {
+    color: #1f2937;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.eventscms-widget-event-title a:hover {
+    color: #2563eb;
+}
+
+.eventscms-widget-event-date {
+    font-size: 0.8125rem;
+    color: #6b7280;
+}
+
+/* Widget sidebar styling */
+.widget_eventscms_upcoming_events {
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.widget_eventscms_upcoming_events .widget-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0 0 20px 0;
+    color: #1f2937;
+    border-bottom: 2px solid #2563eb;
+    padding-bottom: 10px;
+}
+
+/* Widget Buttons */
+.eventscms-widget-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.eventscms-widget-btn {
+    display: block;
+    padding: 12px 16px;
+    text-align: center;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.875rem;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.eventscms-btn-calendar {
+    background: #2563eb;
+    color: #ffffff;
+    border: 2px solid #2563eb;
+}
+
+.eventscms-btn-calendar:hover {
+    background: #1d4ed8;
+    border-color: #1d4ed8;
+    text-decoration: none;
+    color: #ffffff;
+}
+
+.eventscms-btn-submit {
+    background: #ffffff;
+    color: #2563eb;
+    border: 2px solid #2563eb;
+}
+
+.eventscms-btn-submit:hover {
+    background: #eff6ff;
+    text-decoration: none;
+    color: #1d4ed8;
+    border-color: #1d4ed8;
+}

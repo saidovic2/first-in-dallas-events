@@ -22,6 +22,7 @@ Events CMS Directory is a WordPress plugin that seamlessly integrates with your 
 * ⚡ Fast API integration
 * 📱 Mobile-friendly design
 * 🎯 Simple shortcode implementation
+* 📌 Sidebar widget for upcoming events
 
 **How to Use:**
 
@@ -49,6 +50,16 @@ Show only music events:
 
 Show Facebook events only:
 `[events_directory source_type="facebook" limit="15"]`
+
+**Sidebar Widget:**
+
+Add the "Upcoming Events" widget to any widget area:
+1. Go to Appearance → Widgets
+2. Find "Upcoming Events" widget
+3. Drag it to your desired widget area (sidebar, footer, etc.)
+4. Configure the title and number of events to display (default: 5)
+
+The widget will automatically display the next upcoming published events with their images and dates.
 
 == Installation ==
 
@@ -97,6 +108,7 @@ Yes! You can modify the CSS file in the plugin folder or use WordPress customize
 * Grid layout with responsive design
 * City, category, and status filtering
 * Settings page for API configuration
+* Upcoming Events sidebar widget
 
 == Upgrade Notice ==
 

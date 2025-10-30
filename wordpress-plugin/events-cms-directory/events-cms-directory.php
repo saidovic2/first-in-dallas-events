@@ -31,6 +31,9 @@ class EventsCMSDirectory {
         
         // Enqueue styles
         add_action('wp_enqueue_scripts', array($this, 'enqueue_styles'));
+        
+        // Register widget
+        add_action('widgets_init', array($this, 'register_widgets'));
     }
     
     /**
@@ -119,6 +122,13 @@ class EventsCMSDirectory {
             array(),
             '1.0.0'
         );
+    }
+    
+    /**
+     * Register widgets
+     */
+    public function register_widgets() {
+        register_widget('EventsCMS_Upcoming_Events_Widget');
     }
     
     /**
@@ -504,6 +514,215 @@ class EventsCMSDirectory {
         </div>
         <?php
         return ob_get_clean();
+    }
+}
+
+/**
+ * Upcoming Events Widget
+ */
+class EventsCMS_Upcoming_Events_Widget extends WP_Widget {
+    
+    /**
+     * Constructor
+     */
+    public function __construct() {
+        parent::__construct(
+            'eventscms_upcoming_events',
+            'Upcoming Events',
+            array('description' => 'Display upcoming events from Events CMS')
+        );
+    }
+    
+    /**
+     * Front-end display of widget
+     */
+    public function widget($args, $instance) {
+        $title = !empty($instance['title']) ? $instance['title'] : 'Events';
+        $limit = !empty($instance['limit']) ? absint($instance['limit']) : 5;
+        
+        // Fetch upcoming events
+        $events = $this->get_upcoming_events($limit);
+        
+        if (empty($events)) {
+            return;
+        }
+        
+        echo $args['before_widget'];
+        
+        if (!empty($title)) {
+            echo $args['before_title'] . esc_html($title) . $args['after_title'];
+        }
+        
+        echo '<div class="eventscms-widget-events">';
+        
+        foreach ($events as $event) {
+            $event_date = new DateTime($event['start_at']);
+            ?>
+            <div class="eventscms-widget-event">
+                <?php if (!empty($event['image_url'])): ?>
+                    <div class="eventscms-widget-event-image">
+                        <img src="<?php echo esc_url($event['image_url']); ?>" 
+                             alt="<?php echo esc_attr($event['title']); ?>">
+                    </div>
+                <?php endif; ?>
+                <div class="eventscms-widget-event-content">
+                    <h4 class="eventscms-widget-event-title">
+                        <?php if (!empty($event['source_url'])): ?>
+                            <a href="<?php echo esc_url($event['source_url']); ?>" 
+                               target="_blank" 
+                               rel="noopener noreferrer">
+                                <?php echo esc_html($event['title']); ?>
+                            </a>
+                        <?php else: ?>
+                            <?php echo esc_html($event['title']); ?>
+                        <?php endif; ?>
+                    </h4>
+                    <div class="eventscms-widget-event-date">
+                        <?php echo esc_html($event_date->format('F j, Y')); ?>
+                    </div>
+                </div>
+            </div>
+            <?php
+        }
+        
+        echo '</div>';
+        
+        // Add action buttons
+        $calendar_url = !empty($instance['calendar_url']) ? $instance['calendar_url'] : '#';
+        $submit_url = !empty($instance['submit_url']) ? $instance['submit_url'] : '#';
+        ?>
+        <div class="eventscms-widget-buttons">
+            <a href="<?php echo esc_url($calendar_url); ?>" class="eventscms-widget-btn eventscms-btn-calendar">
+                See events Calendar
+            </a>
+            <a href="<?php echo esc_url($submit_url); ?>" class="eventscms-widget-btn eventscms-btn-submit">
+                Submit Your event
+            </a>
+        </div>
+        <?php
+        
+        echo $args['after_widget'];
+    }
+    
+    /**
+     * Back-end widget form
+     */
+    public function form($instance) {
+        $title = !empty($instance['title']) ? $instance['title'] : 'Events';
+        $limit = !empty($instance['limit']) ? absint($instance['limit']) : 5;
+        $calendar_url = !empty($instance['calendar_url']) ? $instance['calendar_url'] : '';
+        $submit_url = !empty($instance['submit_url']) ? $instance['submit_url'] : '';
+        ?>
+        <p>
+            <label for="<?php echo esc_attr($this->get_field_id('title')); ?>">
+                Title:
+            </label>
+            <input class="widefat" 
+                   id="<?php echo esc_attr($this->get_field_id('title')); ?>" 
+                   name="<?php echo esc_attr($this->get_field_name('title')); ?>" 
+                   type="text" 
+                   value="<?php echo esc_attr($title); ?>">
+        </p>
+        <p>
+            <label for="<?php echo esc_attr($this->get_field_id('limit')); ?>">
+                Number of events to show:
+            </label>
+            <input class="tiny-text" 
+                   id="<?php echo esc_attr($this->get_field_id('limit')); ?>" 
+                   name="<?php echo esc_attr($this->get_field_name('limit')); ?>" 
+                   type="number" 
+                   step="1" 
+                   min="1" 
+                   max="10"
+                   value="<?php echo esc_attr($limit); ?>" 
+                   size="3">
+        </p>
+        <p>
+            <label for="<?php echo esc_attr($this->get_field_id('calendar_url')); ?>">
+                Calendar Page URL:
+            </label>
+            <input class="widefat" 
+                   id="<?php echo esc_attr($this->get_field_id('calendar_url')); ?>" 
+                   name="<?php echo esc_attr($this->get_field_name('calendar_url')); ?>" 
+                   type="url" 
+                   value="<?php echo esc_attr($calendar_url); ?>"
+                   placeholder="https://yoursite.com/events-calendar">
+        </p>
+        <p>
+            <label for="<?php echo esc_attr($this->get_field_id('submit_url')); ?>">
+                Submit Event Page URL:
+            </label>
+            <input class="widefat" 
+                   id="<?php echo esc_attr($this->get_field_id('submit_url')); ?>" 
+                   name="<?php echo esc_attr($this->get_field_name('submit_url')); ?>" 
+                   type="url" 
+                   value="<?php echo esc_attr($submit_url); ?>"
+                   placeholder="https://yoursite.com/submit-event">
+        </p>
+        <?php
+    }
+    
+    /**
+     * Update widget settings
+     */
+    public function update($new_instance, $old_instance) {
+        $instance = array();
+        $instance['title'] = (!empty($new_instance['title'])) ? sanitize_text_field($new_instance['title']) : '';
+        $instance['limit'] = (!empty($new_instance['limit'])) ? absint($new_instance['limit']) : 5;
+        $instance['calendar_url'] = (!empty($new_instance['calendar_url'])) ? esc_url_raw($new_instance['calendar_url']) : '';
+        $instance['submit_url'] = (!empty($new_instance['submit_url'])) ? esc_url_raw($new_instance['submit_url']) : '';
+        return $instance;
+    }
+    
+    /**
+     * Get upcoming events from API
+     */
+    private function get_upcoming_events($limit = 5) {
+        $api_url = get_option('events_cms_api_url', 'http://localhost:8001/api');
+        
+        // Build URL with parameters
+        $query_params = array(
+            'status' => 'PUBLISHED',
+            'limit' => $limit,
+        );
+        
+        $url = add_query_arg($query_params, $api_url . '/events');
+        
+        // Make API request
+        $response = wp_remote_get($url, array(
+            'timeout' => 10,
+            'headers' => array(
+                'Accept' => 'application/json',
+            ),
+        ));
+        
+        if (is_wp_error($response)) {
+            return array();
+        }
+        
+        $body = wp_remote_retrieve_body($response);
+        $data = json_decode($body, true);
+        
+        if (!is_array($data)) {
+            return array();
+        }
+        
+        // Filter only upcoming events (start_at >= now)
+        $now = new DateTime();
+        $upcoming = array_filter($data, function($event) use ($now) {
+            if (empty($event['start_at'])) {
+                return false;
+            }
+            $event_date = new DateTime($event['start_at']);
+            return $event_date >= $now;
+        });
+        
+        // Sort by date (earliest first)
+        usort($upcoming, function($a, $b) {
+            return strtotime($a['start_at']) - strtotime($b['start_at']);
+        });
+        
+        return array_slice($upcoming, 0, $limit);
     }
 }
 
