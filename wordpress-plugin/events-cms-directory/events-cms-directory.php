@@ -1,12 +1,17 @@
 <?php
 /**
  * Plugin Name: Events CMS Directory
- * Plugin URI: https://github.com/yourusername/events-cms
- * Description: Display events from your Events CMS on WordPress pages using shortcodes
- * Version: 1.0.0
- * Author: Your Name
- * Author URI: https://yourwebsite.com
+ * Plugin URI: https://github.com/saidovic2/events-cms-directory
+ * Description: Display events from your Events CMS on WordPress pages using shortcodes and widgets
+ * Version: 1.1.0
+ * Author: Saidovic
+ * Author URI: https://firstindallas.com
  * License: GPL2
+ * GitHub Plugin URI: saidovic2/events-cms-directory
+ * GitHub Branch: main
+ * Requires at least: 5.0
+ * Tested up to: 6.4
+ * Requires PHP: 7.4
  */
 
 // Prevent direct access
@@ -18,7 +23,7 @@ class EventsCMSDirectory {
     
     private $api_url;
     
-    public function __init() {
+    public function __construct() {
         // Get API URL from settings (default to localhost)
         $this->api_url = get_option('events_cms_api_url', 'http://localhost:8001/api');
         
@@ -729,6 +734,5 @@ class EventsCMS_Upcoming_Events_Widget extends WP_Widget {
 // Initialize plugin
 function events_cms_directory_init() {
     $plugin = new EventsCMSDirectory();
-    $plugin->__init();
 }
 add_action('plugins_loaded', 'events_cms_directory_init');
