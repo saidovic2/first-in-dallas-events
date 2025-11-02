@@ -31,12 +31,46 @@
     height: 200px;
     overflow: hidden;
     background: #f3f4f6;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .event-image img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    display: block;
+}
+
+/* Fallback for broken images */
+.event-image img[src=""],
+.event-image img:not([src]),
+.event-image img[src*="undefined"] {
+    display: none;
+}
+
+/* Show placeholder when image fails */
+.event-image-placeholder {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.event-image-placeholder .placeholder-icon {
+    font-size: 4rem;
+    color: white;
+    opacity: 0.9;
+}
+
+/* Fallback for older browsers */
+.event-image:empty::after {
+    content: '📅';
+    font-size: 4rem;
+    color: white;
+    opacity: 0.9;
 }
 
 .event-content {

@@ -3,7 +3,7 @@
  * Plugin Name: Events CMS Directory
  * Plugin URI: https://github.com/saidovic2/events-cms-directory
  * Description: Display events from your Events CMS on WordPress pages using shortcodes and widgets
- * Version: 1.1.2
+ * Version: 1.1.1
  * Author: Saidovic
  * Author URI: https://firstindallas.com
  * License: GPL2
@@ -34,9 +34,8 @@ class EventsCMSDirectory {
         add_action('admin_menu', array($this, 'add_settings_page'));
         add_action('admin_init', array($this, 'register_settings'));
         
-        // Enqueue styles and scripts
+        // Enqueue styles
         add_action('wp_enqueue_scripts', array($this, 'enqueue_styles'));
-        add_action('wp_enqueue_scripts', array($this, 'enqueue_scripts'));
         
         // Register widget
         add_action('widgets_init', array($this, 'register_widgets'));
@@ -126,20 +125,7 @@ class EventsCMSDirectory {
             'events-cms-directory',
             plugin_dir_url(__FILE__) . 'css/style.css',
             array(),
-            '1.1.1'
-        );
-    }
-    
-    /**
-     * Enqueue plugin scripts
-     */
-    public function enqueue_scripts() {
-        wp_enqueue_script(
-            'events-cms-directory',
-            plugin_dir_url(__FILE__) . 'js/events.js',
-            array('jquery'),
-            '1.1.1',
-            true
+            '1.0.0'
         );
     }
     

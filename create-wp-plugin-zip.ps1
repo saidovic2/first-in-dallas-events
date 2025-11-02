@@ -4,44 +4,38 @@
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
 $sourceFolder = "wordpress-plugin\events-cms-directory"
-$destination = "events-cms-directory-wordpress.zip"
-$tempFolder = "temp-wp-plugin"
+$destination = "events-cms-directory.zip"
 
 Write-Host ""
 Write-Host "Creating WordPress-compatible plugin ZIP..." -ForegroundColor Cyan
 Write-Host ""
 
-# Clean up
+# Clean up old zip
 if (Test-Path $destination) {
     Remove-Item $destination -Force
+    Write-Host "Removed old ZIP" -ForegroundColor Yellow
 }
 
-if (Test-Path $tempFolder) {
-    Remove-Item $tempFolder -Recurse -Force
+# Verify source exists
+if (-not (Test-Path $sourceFolder)) {
+    Write-Host "ERROR: Source folder not found!" -ForegroundColor Red
+    exit 1
 }
 
-# Create temp structure
-New-Item -ItemType Directory -Path "$tempFolder\events-cms-directory" -Force | Out-Null
-
-# Copy all files
-Write-Host "Copying plugin files..." -ForegroundColor Yellow
-Copy-Item -Path "$sourceFolder\*" -Destination "$tempFolder\events-cms-directory\" -Recurse -Force
-
-# Create ZIP
-Write-Host "Creating ZIP archive..." -ForegroundColor Yellow
-$sourcePath = (Resolve-Path "$tempFolder\events-cms-directory").Path
+# Get full paths
+$sourcePath = (Resolve-Path $sourceFolder).Path
 $destPath = Join-Path (Get-Location) $destination
 
-[System.IO.Compression.ZipFile]::CreateFromDirectory($sourcePath, $destPath, [System.IO.Compression.CompressionLevel]::Optimal, $false)
+Write-Host "Creating ZIP archive..." -ForegroundColor Yellow
 
-# Clean up temp
-Remove-Item $tempFolder -Recurse -Force
+# Create ZIP - includeBaseDirectory = $true ensures the folder is named correctly
+[System.IO.Compression.ZipFile]::CreateFromDirectory($sourcePath, $destPath, [System.IO.Compression.CompressionLevel]::Optimal, $true)
 
 Write-Host ""
 Write-Host "SUCCESS!" -ForegroundColor Green
 Write-Host ""
-Write-Host "WordPress plugin ZIP created: $destination" -ForegroundColor White
+Write-Host "File: $destination" -ForegroundColor White
 Write-Host "Location: $(Get-Location)\$destination" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "Upload this file to WordPress now!" -ForegroundColor Yellow
+Write-Host "This ZIP is ready for WordPress upload!" -ForegroundColor Yellow
 Write-Host ""
