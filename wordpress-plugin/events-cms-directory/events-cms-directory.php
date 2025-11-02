@@ -3,7 +3,7 @@
  * Plugin Name: Events CMS Directory
  * Plugin URI: https://github.com/saidovic2/events-cms-directory
  * Description: Display events from your Events CMS on WordPress pages using shortcodes and widgets
- * Version: 1.1.0
+ * Version: 1.1.1
  * Author: Saidovic
  * Author URI: https://firstindallas.com
  * License: GPL2
@@ -561,7 +561,16 @@ class EventsCMS_Upcoming_Events_Widget extends WP_Widget {
         echo '<div class="eventscms-widget-events">';
         
         foreach ($events as $event) {
-            $event_date = new DateTime($event['start_at']);
+            // Skip if missing required data
+            if (empty($event['title']) || empty($event['start_at'])) {
+                continue;
+            }
+            
+            try {
+                $event_date = new DateTime($event['start_at']);
+            } catch (Exception $e) {
+                continue; // Skip events with invalid dates
+            }
             ?>
             <div class="eventscms-widget-event">
                 <?php if (!empty($event['image_url'])): ?>
