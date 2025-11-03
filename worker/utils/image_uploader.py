@@ -1,30 +1,30 @@
 """
 Image Uploader Utility
-Downloads external images and uploads them to Supabase Storage
+Downloads external images and saves them to Supabase Storage (persistent)
 """
 
 import requests
 import os
-from supabase import create_client, Client
 from typing import Optional
 import hashlib
 from urllib.parse import urlparse
-import mimetypes
+from supabase import create_client, Client
 
-# Initialize Supabase client
+# Supabase configuration
 SUPABASE_URL = os.getenv("SUPABASE_URL", "")
 SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
 
 if SUPABASE_URL and SUPABASE_KEY:
     supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+    print("✅ Supabase client initialized for image storage")
 else:
     supabase = None
-    print("⚠️  Supabase credentials not found - image upload will be skipped")
+    print("⚠️  Supabase not configured - images will not be cached")
 
 
-def upload_external_image_to_supabase(image_url: str) -> Optional[str]:
+def download_and_save_image(image_url: str) -> Optional[str]:
     """
-    Download an external image and upload it to Supabase Storage
+    Download an external image and save it to Supabase Storage
     
     Args:
         image_url: External image URL (Facebook, Ticketmaster, etc.)
@@ -39,24 +39,23 @@ def upload_external_image_to_supabase(image_url: str) -> Optional[str]:
         # Generate unique filename based on URL hash
         url_hash = hashlib.md5(image_url.encode()).hexdigest()[:12]
         
-        # Get file extension from URL or content-type
+        # Get file extension from URL
         parsed_url = urlparse(image_url)
         ext = os.path.splitext(parsed_url.path)[1]
         
         if not ext or ext not in ['.jpg', '.jpeg', '.png', '.gif', '.webp']:
             ext = '.jpg'  # Default to jpg
             
-        filename = f"event-images/{url_hash}{ext}"
+        filename = f"bulk-events/{url_hash}{ext}"
         
-        # Check if already uploaded
+        # Check if already uploaded to Supabase
         try:
-            existing = supabase.storage.from_('events').get_public_url(filename)
-            if existing:
-                # Verify it exists
-                check_response = requests.head(existing, timeout=5)
-                if check_response.status_code == 200:
-                    print(f"✅ Image already cached: {filename}")
-                    return existing
+            existing_url = supabase.storage.from_('events').get_public_url(filename)
+            # Verify it exists
+            check_response = requests.head(existing_url, timeout=5)
+            if check_response.status_code == 200:
+                print(f"✅ Image already in Supabase: {filename}")
+                return existing_url
         except:
             pass
         
@@ -70,13 +69,11 @@ def upload_external_image_to_supabase(image_url: str) -> Optional[str]:
         
         # Get content type
         content_type = response.headers.get('content-type', 'image/jpeg')
-        
-        # Read image data
         image_data = response.content
         
         # Upload to Supabase Storage
-        print(f"⬆️  Uploading to Supabase: {filename}")
-        result = supabase.storage.from_('events').upload(
+        print(f"☁️  Uploading to Supabase: {filename}")
+        supabase.storage.from_('events').upload(
             filename,
             image_data,
             file_options={"content-type": content_type}
@@ -84,8 +81,7 @@ def upload_external_image_to_supabase(image_url: str) -> Optional[str]:
         
         # Get public URL
         public_url = supabase.storage.from_('events').get_public_url(filename)
-        
-        print(f"✅ Image uploaded successfully: {public_url[:80]}...")
+        print(f"✅ Image uploaded to Supabase: {public_url[:80]}...")
         return public_url
         
     except requests.exceptions.Timeout:
@@ -95,13 +91,13 @@ def upload_external_image_to_supabase(image_url: str) -> Optional[str]:
         print(f"❌ Failed to download image: {str(e)[:100]}")
         return None
     except Exception as e:
-        print(f"❌ Failed to upload image to Supabase: {str(e)[:100]}")
+        print(f"❌ Failed to upload to Supabase: {str(e)[:100]}")
         return None
 
 
 def process_event_image(event_data: dict) -> dict:
     """
-    Process an event's image_url by uploading it to Supabase if it's external
+    Process an event's image_url by downloading it to Supabase Storage if it's external
     
     Args:
         event_data: Event dictionary with image_url field
@@ -116,15 +112,15 @@ def process_event_image(event_data: dict) -> dict:
     
     # Skip if already a Supabase URL
     if SUPABASE_URL and SUPABASE_URL in external_url:
-        print(f"✅ Image already in Supabase storage")
+        print(f"✅ Image already in Supabase Storage")
         return event_data
         
-    # Upload to Supabase
-    supabase_url = upload_external_image_to_supabase(external_url)
+    # Download and save to Supabase
+    supabase_url = download_and_save_image(external_url)
     
     if supabase_url:
         event_data['image_url'] = supabase_url
-        print(f"🖼️  Image URL updated to Supabase storage")
+        print(f"🖼️  Image URL updated to Supabase Storage")
     else:
         print(f"⚠️  Keeping original image URL (upload failed)")
         
