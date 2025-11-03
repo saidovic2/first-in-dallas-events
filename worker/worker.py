@@ -17,6 +17,7 @@ from extractors.html import extract_html_fallback
 from extractors.facebook import extract_facebook_event
 from extractors.apify_facebook import extract_facebook_with_apify
 from extractors.eventbrite import extract_eventbrite_events
+from utils.image_uploader import process_event_image
 
 # Database setup
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/events_cms")
@@ -114,6 +115,9 @@ def process_task(task_data):
             
             saved_count = 0
             for event_data in events:
+                # Process external images - upload to Supabase Storage
+                event_data = process_event_image(event_data)
+                
                 # Generate unique hash
                 hash_string = f"{event_data['title']}{event_data['start_at']}{url}"
                 fid_hash = hashlib.md5(hash_string.encode()).hexdigest()
