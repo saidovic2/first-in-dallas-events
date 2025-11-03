@@ -8,18 +8,33 @@ import os
 from typing import Optional
 import hashlib
 from urllib.parse import urlparse
-from supabase import create_client, Client
+
+# Try to import Supabase (might not be available in all environments)
+try:
+    from supabase import create_client, Client
+    SUPABASE_AVAILABLE = True
+except ImportError:
+    print("⚠️  Supabase library not installed - image caching disabled")
+    SUPABASE_AVAILABLE = False
+    Client = None
 
 # Supabase configuration
 SUPABASE_URL = os.getenv("SUPABASE_URL", "")
 SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
 
-if SUPABASE_URL and SUPABASE_KEY:
-    supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-    print("✅ Supabase client initialized for image storage")
+if SUPABASE_AVAILABLE and SUPABASE_URL and SUPABASE_KEY:
+    try:
+        supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+        print("✅ Supabase client initialized for image storage")
+    except Exception as e:
+        supabase = None
+        print(f"⚠️  Failed to initialize Supabase: {e}")
 else:
     supabase = None
-    print("⚠️  Supabase not configured - images will not be cached")
+    if not SUPABASE_AVAILABLE:
+        print("⚠️  Supabase library not available")
+    else:
+        print("⚠️  Supabase credentials not configured - images will not be cached")
 
 
 def download_and_save_image(image_url: str) -> Optional[str]:
