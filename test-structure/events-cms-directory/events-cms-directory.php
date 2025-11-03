@@ -3,7 +3,7 @@
  * Plugin Name: Events CMS Directory
  * Plugin URI: https://github.com/saidovic2/events-cms-directory
  * Description: Display events from your Events CMS on WordPress pages using shortcodes and widgets
- * Version: 1.1.3
+ * Version: 1.1.2
  * Author: Saidovic
  * Author URI: https://firstindallas.com
  * License: GPL2
