@@ -1,13 +1,13 @@
 <?php
 /**
  * Plugin Name: Events CMS Directory
- * Plugin URI: https://github.com/saidovic2/first-in-dallas-events
+ * Plugin URI: https://github.com/saidovic2/events-cms-directory
  * Description: Display events from your Events CMS on WordPress pages using shortcodes and widgets
  * Version: 1.1.3
  * Author: Saidovic
  * Author URI: https://firstindallas.com
  * License: GPL2
- * GitHub Plugin URI: saidovic2/first-in-dallas-events
+ * GitHub Plugin URI: saidovic2/events-cms-directory
  * GitHub Branch: main
  * Requires at least: 5.0
  * Tested up to: 6.4
