@@ -89,11 +89,12 @@ Write-Host "Step 2: Uploading plugin files to WordPress server..." -ForegroundCo
 
 if ($useWinSCP) {
     # Use WinSCP for reliable FTP transfer
+    $pluginRemotePath = "${ftpRemotePath}/events-cms-directory"
     $winscpScript = @"
 open ftp://${ftpUser}:${ftpPassword}@${ftpHost}:${ftpPort}
 option batch abort
 option confirm off
-synchronize remote "$pluginPath" "$ftpRemotePath" -delete -mirror
+synchronize remote "$pluginPath" "$pluginRemotePath" -delete -mirror
 close
 exit
 "@
@@ -117,7 +118,7 @@ exit
     Write-Host "  Using PowerShell FTP (may be slower)..." -ForegroundColor Gray
     
     # Create WebClient for FTP
-    $ftpBase = "ftp://${ftpHost}:${ftpPort}${ftpRemotePath}"
+    $ftpBase = "ftp://${ftpHost}:${ftpPort}${ftpRemotePath}/events-cms-directory"
     
     # Get all files to upload
     $files = Get-ChildItem -Path $pluginPath -Recurse -File | Where-Object { 
