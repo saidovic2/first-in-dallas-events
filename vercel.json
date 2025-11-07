@@ -1,3 +1,7 @@
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json"
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "cd hub && npm run build",
+  "devCommand": "cd hub && npm run dev",
+  "installCommand": "cd hub && npm install",
+  "outputDirectory": "hub/.next"
 }
