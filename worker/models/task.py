@@ -12,8 +12,6 @@ class TaskStatus(str, enum.Enum):
     FAILED = "failed"
 
 class SourceType(str, enum.Enum):
-    FACEBOOK = "facebook"
-    FACEBOOK_BULK = "facebook_bulk"
     EVENTBRITE = "eventbrite"
     EVENTBRITE_BULK = "eventbrite_bulk"
     INSTAGRAM = "instagram"

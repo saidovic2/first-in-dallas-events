@@ -8,8 +8,6 @@ class EventStatus(str, enum.Enum):
     PUBLISHED = "PUBLISHED"
 
 class SourceType(str, enum.Enum):
-    FACEBOOK = "facebook"
-    FACEBOOK_BULK = "facebook_bulk"
     EVENTBRITE = "eventbrite"
     EVENTBRITE_BULK = "eventbrite_bulk"
     INSTAGRAM = "instagram"

@@ -14,8 +14,6 @@ from extractors.json_ld import extract_json_ld
 from extractors.ics import extract_ics
 from extractors.rss import extract_rss
 from extractors.html import extract_html_fallback
-from extractors.facebook import extract_facebook_event
-from extractors.apify_facebook import extract_facebook_with_apify
 from extractors.eventbrite import extract_eventbrite_events
 from utils.image_uploader import process_event_image
 
@@ -69,11 +67,7 @@ def process_task(task_data):
         events = []
         
         # Check for bulk sync operations
-        if source_type == "facebook_bulk" and url == "bulk:facebook:dallas":
-            # Bulk Facebook sync
-            from extractors.bulk_facebook import bulk_sync_facebook_dallas
-            events = bulk_sync_facebook_dallas()
-        elif source_type == "eventbrite_bulk" and url == "bulk:eventbrite:dallas":
+        if source_type == "eventbrite_bulk" and url == "bulk:eventbrite:dallas":
             # Bulk Eventbrite sync
             from extractors.bulk_eventbrite import bulk_sync_eventbrite_dallas
             events = bulk_sync_eventbrite_dallas()
@@ -86,12 +80,6 @@ def process_task(task_data):
             events = extract_ics(url)
         elif source_type == "rss":
             events = extract_rss(url)
-        elif source_type == "facebook":
-            # Try Apify first (if token is available), then fallback to basic scraper
-            events = extract_facebook_with_apify(url)
-            if not events:
-                print("Falling back to basic Facebook scraper...")
-                events = extract_facebook_event(url)
         elif source_type == "eventbrite" or "eventbrite.com" in url:
             # Use Eventbrite API
             events = extract_eventbrite_events(url)
@@ -108,9 +96,7 @@ def process_task(task_data):
             
             # Map bulk task types to event source types
             event_source_type = source_type
-            if source_type == "facebook_bulk":
-                event_source_type = "facebook"
-            elif source_type == "eventbrite_bulk":
+            if source_type == "eventbrite_bulk":
                 event_source_type = "eventbrite"
             
             saved_count = 0

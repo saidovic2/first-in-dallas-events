@@ -9,7 +9,6 @@ class SourceStatus(str, enum.Enum):
     FAILED = "failed"
 
 class SourceType(str, enum.Enum):
-    FACEBOOK = "facebook"
     INSTAGRAM = "instagram"
     WEBPAGE = "webpage"
     ICS = "ics"

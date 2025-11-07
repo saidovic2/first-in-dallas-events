@@ -65,7 +65,7 @@ export default function AddEventsPage() {
         <CardHeader>
           <CardTitle>Extract Events from URLs</CardTitle>
           <CardDescription>
-            Supports Facebook, Instagram, ICS files, RSS feeds, and webpages with event data
+            Supports Instagram, ICS files, RSS feeds, Eventbrite, and webpages with event data
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -169,8 +169,8 @@ export default function AddEventsPage() {
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <div className="p-3 border rounded-lg">
-              <div className="font-medium text-sm">Facebook Events</div>
-              <div className="text-xs text-muted-foreground mt-1">facebook.com/events/*</div>
+              <div className="font-medium text-sm">Eventbrite Events</div>
+              <div className="text-xs text-muted-foreground mt-1">eventbrite.com/*</div>
             </div>
             <div className="p-3 border rounded-lg">
               <div className="font-medium text-sm">Instagram Posts</div>
