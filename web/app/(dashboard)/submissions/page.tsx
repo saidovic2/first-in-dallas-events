@@ -281,9 +281,13 @@ export default function SubmissionsPage() {
                         </span>
                       </div>
                       <div>
-                        <span className="text-gray-500">Type:</span>
-                        <span className="ml-2 font-medium capitalize">
-                          {submission.category === 'PAID' ? 'Featured' : 'Standard'}
+                        <span className="text-gray-500">Submission Plan:</span>
+                        <span className={`ml-2 font-bold capitalize ${
+                          submission.submission_type === 'paid' 
+                            ? 'text-amber-600' 
+                            : 'text-gray-700'
+                        }`}>
+                          {submission.submission_type === 'paid' ? '🟧 Premium Featured ($99)' : 'Free Listing'}
                         </span>
                       </div>
                     </div>

@@ -607,7 +607,7 @@ export default function SubmitPage() {
                         </li>
                         <li className="flex items-start">
                           <span className="text-amber-600 mr-2 mt-0.5">•</span>
-                          <span><strong>Weekly Newsletter Shout-Out</strong> — Your event featured directly in our 25K-subscriber Dallas newsletter</span>
+                          <span><strong>Daily Newsletter Shout-Out</strong> — Your event featured directly in our 25K-subscriber Dallas newsletter</span>
                         </li>
                         <li className="flex items-start">
                           <span className="text-amber-600 mr-2 mt-0.5">•</span>
