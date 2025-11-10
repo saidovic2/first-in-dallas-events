@@ -8,8 +8,30 @@ export async function GET(request: Request) {
 
   if (code) {
     const supabase = createRouteHandlerClient({ cookies })
-    await supabase.auth.exchangeCodeForSession(code)
+    const { data: { session } } = await supabase.auth.exchangeCodeForSession(code)
+    
+    // If user signed in with Google, create organizer profile if it doesn't exist
+    if (session?.user) {
+      const { data: existingProfile } = await supabase
+        .from('organizers')
+        .select('id')
+        .eq('id', session.user.id)
+        .single()
+      
+      // Create organizer profile for new Google users
+      if (!existingProfile) {
+        await supabase
+          .from('organizers')
+          .insert({
+            id: session.user.id,
+            email: session.user.email,
+            full_name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || '',
+            organization_name: '',
+          })
+      }
+    }
   }
 
-  return NextResponse.redirect(new URL('/dashboard', request.url))
+  // Redirect to dashboard on the same domain the callback was called from
+  return NextResponse.redirect(new URL('/dashboard', requestUrl.origin))
 }

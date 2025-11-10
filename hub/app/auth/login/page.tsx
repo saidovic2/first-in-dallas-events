@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Calendar, CheckCircle, Upload, BarChart } from 'lucide-react'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -43,10 +44,14 @@ export default function LoginPage() {
 
   const handleGoogleLogin = async () => {
     try {
+      // Always use production URL for OAuth redirects
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      const redirectUrl = isLocalhost ? 'https://hub.firstindallas.com' : window.location.origin
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: `${redirectUrl}/auth/callback`,
         },
       })
       if (error) throw error
@@ -60,14 +65,81 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">Welcome Back</CardTitle>
-          <CardDescription className="text-center">
-            Sign in to your organizer account
-          </CardDescription>
-        </CardHeader>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4 py-12">
+      <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-8 items-center">
+        {/* Left Side - Information */}
+        <div className="hidden lg:block space-y-6">
+          <div>
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">
+              First in Dallas
+              <span className="block text-blue-600">Organizer Portal</span>
+            </h1>
+            <p className="text-lg text-gray-700">
+              Your gateway to reaching thousands of Dallas-area event seekers
+            </p>
+          </div>
+
+          <div className="bg-white rounded-lg p-6 shadow-md">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">What You'll Get Access To:</h2>
+            <div className="space-y-4">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <Upload className="h-5 w-5 text-blue-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">Submit Your Events</h3>
+                  <p className="text-sm text-gray-600">Easily submit and manage your events for review and publication</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">Track Submissions</h3>
+                  <p className="text-sm text-gray-600">Monitor the status of your events (Pending, Published, or Rejected)</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <Calendar className="h-5 w-5 text-purple-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">Manage Your Events</h3>
+                  <p className="text-sm text-gray-600">Edit and update your published events at any time</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
+                  <BarChart className="h-5 w-5 text-amber-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">Reach Your Audience</h3>
+                  <p className="text-sm text-gray-600">Get featured on First in Dallas calendar and reach thousands of locals</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <p className="text-sm text-blue-900">
+              <strong>Note:</strong> All event submissions are reviewed by our team to ensure quality. 
+              Approved events appear on the main First in Dallas calendar.
+            </p>
+          </div>
+        </div>
+
+        {/* Right Side - Login Form */}
+        <Card className="w-full shadow-xl">
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-2xl font-bold text-center">Welcome Back</CardTitle>
+            <CardDescription className="text-center">
+              Sign in to manage your events and submissions
+            </CardDescription>
+          </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
@@ -133,6 +205,7 @@ export default function LoginPage() {
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
   )
 }

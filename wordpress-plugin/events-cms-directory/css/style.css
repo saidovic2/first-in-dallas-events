@@ -510,14 +510,14 @@
 }
 
 .eventscms-btn-submit {
-    background: #ffffff;
-    color: #2563eb;
-    border: 2px solid #2563eb;
+    background: #fbbf24;
+    color: #ffffff;
+    border: 2px solid #fbbf24;
 }
 
 .eventscms-btn-submit:hover {
-    background: #eff6ff;
+    background: #f59e0b;
     text-decoration: none;
-    color: #1d4ed8;
-    border-color: #1d4ed8;
+    color: #ffffff;
+    border-color: #f59e0b;
 }

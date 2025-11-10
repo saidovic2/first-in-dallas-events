@@ -1,0 +1,51 @@
+TO: developersupport@ticketmaster.com
+SUBJECT: API Key Approved but Returns 401 Unauthorized Error - Discovery API Access Needed
+
+---
+
+Hello Ticketmaster Developer Support,
+
+I recently created an application and received approval for my API key, but I'm experiencing a 401 Unauthorized error when attempting to access the Discovery API endpoints.
+
+APPLICATION DETAILS:
+- App Name: First in Dallas Events v2
+- Consumer Key: 5J6gVlhTbffU8kyFbTL5jeIqpkorcmQO
+- Date Created: November 7, 2025 at 17:35
+- Current Status: Public APIs - Approved, OAuth Product - Approved
+- Key Expiration: Never
+
+ISSUE:
+When I attempt to make requests to the Discovery API, I receive the following error:
+
+Request URL:
+https://app.ticketmaster.com/discovery/v2/events.json?apikey=5J6gVlhTbffU8kyFbTL5jeIqpkorcmQO&city=Dallas&stateCode=TX&size=5
+
+Response:
+HTTP Status: 401 Unauthorized
+Error Body: {"fault":{"faultstring":"Invalid ApiKey","detail":{"errorcode":"oauth.v2.InvalidApiKey"}}}
+
+WHAT I'VE TRIED:
+- Verified I'm using the Consumer Key (not Consumer Secret)
+- Waited for key propagation (30+ minutes)
+- Confirmed the app shows "Approved" status in the developer portal
+- Tested multiple Discovery API endpoints with same result
+
+REQUEST:
+Could you please:
+1. Activate Discovery API access for my application, OR
+2. Let me know what additional steps are required to enable Discovery API access
+
+USE CASE:
+I'm building an event aggregator for the Dallas-Fort Worth area that will help promote Ticketmaster events to local audiences. The application will use your Discovery API to search for and display upcoming events (concerts, sports, theater, family events) in the Dallas region.
+
+I appreciate your assistance in resolving this issue. Please let me know if you need any additional information.
+
+Thank you,
+[Your Name]
+First in Dallas Events
+Website: https://firstindallas.com
+
+---
+
+COPY THE ABOVE (everything from "Hello Ticketmaster..." to your name) and send to:
+developersupport@ticketmaster.com

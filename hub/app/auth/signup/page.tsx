@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Calendar, CheckCircle, Upload, BarChart, Sparkles } from 'lucide-react'
 
 export default function SignupPage() {
   const router = useRouter()
@@ -68,10 +69,14 @@ export default function SignupPage() {
 
   const handleGoogleSignup = async () => {
     try {
+      // Always use production URL for OAuth redirects
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      const redirectUrl = isLocalhost ? 'https://hub.firstindallas.com' : window.location.origin
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: `${redirectUrl}/auth/callback`,
         },
       })
       if (error) throw error
@@ -85,14 +90,91 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">Create Account</CardTitle>
-          <CardDescription className="text-center">
-            Join First in Dallas as an event organizer
-          </CardDescription>
-        </CardHeader>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4 py-12">
+      <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-8 items-center">
+        {/* Left Side - Information */}
+        <div className="hidden lg:block space-y-6">
+          <div>
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">
+              Join First in Dallas
+              <span className="block text-blue-600">Organizer Portal</span>
+            </h1>
+            <p className="text-lg text-gray-700">
+              Share your events with thousands of Dallas-area residents and visitors
+            </p>
+          </div>
+
+          <div className="bg-white rounded-lg p-6 shadow-md">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Why Join Our Platform?</h2>
+            <div className="space-y-4">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <Upload className="h-5 w-5 text-blue-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">Easy Event Submission</h3>
+                  <p className="text-sm text-gray-600">Submit your events in minutes with our simple form</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">Quality Assurance</h3>
+                  <p className="text-sm text-gray-600">Our team reviews submissions to maintain high standards</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <Calendar className="h-5 w-5 text-purple-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">Featured Listings</h3>
+                  <p className="text-sm text-gray-600">Get your events featured on our popular calendar</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
+                  <BarChart className="h-5 w-5 text-amber-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">Grow Your Audience</h3>
+                  <p className="text-sm text-gray-600">Reach thousands of engaged Dallas community members</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-10 h-10 bg-pink-100 rounded-lg flex items-center justify-center">
+                  <Sparkles className="h-5 w-5 text-pink-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">100% Free</h3>
+                  <p className="text-sm text-gray-600">No hidden fees. Submit and manage events at no cost</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <p className="text-sm text-green-900">
+              <strong>Get Started:</strong> Create your free account, submit your first event, 
+              and start connecting with the Dallas community today!
+            </p>
+          </div>
+        </div>
+
+        {/* Right Side - Signup Form */}
+        <Card className="w-full shadow-xl">
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-2xl font-bold text-center">Create Account</CardTitle>
+            <CardDescription className="text-center">
+              Start sharing your events with Dallas
+            </CardDescription>
+          </CardHeader>
         <CardContent>
           <form onSubmit={handleSignup} className="space-y-4">
             <div className="space-y-2">
@@ -179,6 +261,7 @@ export default function SignupPage() {
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
   )
 }
