@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime, Enum, Numeric
+from sqlalchemy import Column, Integer, String, Text, DateTime, Enum, Numeric, Boolean
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from database import Base
 import enum
@@ -41,5 +42,14 @@ class Event(Base):
     fid_hash = Column(String, unique=True, index=True, nullable=False)
     status = Column(String, default="DRAFT", nullable=False, index=True)
     wp_post_id = Column(Integer)
+    
+    # Featured events fields
+    is_featured = Column(Boolean, default=False, index=True)
+    featured_tier = Column(String(20))
+    featured_until = Column(DateTime(timezone=True))
+    
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # Relationships
+    featured_slots = relationship("FeaturedSlot", back_populates="event", cascade="all, delete-orphan")

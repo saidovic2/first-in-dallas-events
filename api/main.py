@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routes import auth, events, tasks, stats, sync, ticketmaster
+from routes import auth, events, tasks, stats, sync, ticketmaster, featured
 from database import engine, Base
 
 app = FastAPI(
@@ -34,6 +34,7 @@ app.add_middleware(
 # Include routers
 app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(events.router, prefix="/api/events", tags=["Events"])
+app.include_router(featured.router, prefix="/api/featured", tags=["Featured Events"])
 app.include_router(tasks.router, prefix="/api/tasks", tags=["Tasks"])
 app.include_router(stats.router, prefix="/api/stats", tags=["Statistics"])
 app.include_router(sync.router, prefix="/api/sync", tags=["Bulk Sync"])

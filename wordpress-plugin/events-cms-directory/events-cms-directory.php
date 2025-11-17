@@ -3,7 +3,7 @@
  * Plugin Name: Events CMS Directory
  * Plugin URI: https://github.com/saidovic2/events-cms-directory
  * Description: Display events from your Events CMS on WordPress pages using shortcodes and widgets
- * Version: 1.1.2
+ * Version: 1.2.0
  * Author: Saidovic
  * Author URI: https://firstindallas.com
  * License: GPL2
@@ -126,7 +126,7 @@ class EventsCMSDirectory {
             'events-cms-directory',
             plugin_dir_url(__FILE__) . 'css/style.css',
             array(),
-            '1.1.1'
+            '1.2.0'
         );
     }
     
@@ -138,7 +138,7 @@ class EventsCMSDirectory {
             'events-cms-directory',
             plugin_dir_url(__FILE__) . 'js/events.js',
             array('jquery'),
-            '1.1.1',
+            '1.1.4',
             true
         );
     }
@@ -177,10 +177,15 @@ class EventsCMSDirectory {
         
         // Add date filter if specified
         if (!empty($date)) {
-            $start_of_day = date('Y-m-d 00:00:00', strtotime($date));
-            $end_of_day = date('Y-m-d 23:59:59', strtotime($date));
-            $params['start_date'] = date('c', strtotime($start_of_day));
-            $params['end_date'] = date('c', strtotime($end_of_day));
+            // Convert to UTC for API compatibility
+            $date_obj = new DateTime($date, new DateTimeZone('UTC'));
+            $start_of_day = clone $date_obj;
+            $start_of_day->setTime(0, 0, 0);
+            $end_of_day = clone $date_obj;
+            $end_of_day->setTime(23, 59, 59);
+            
+            $params['start_date'] = $start_of_day->format('Y-m-d\TH:i:s\Z');
+            $params['end_date'] = $end_of_day->format('Y-m-d\TH:i:s\Z');
         }
         
         // Fetch all matching events from API
@@ -206,6 +211,14 @@ class EventsCMSDirectory {
         // Show filters if enabled
         if ($atts['show_filters'] === 'yes') {
             echo $this->generate_filters_html($search, $city, $date, $price_tier, $cities);
+        }
+        
+        // Show featured events section (only on first page with no filters)
+        if ($current_page === 1 && empty($search) && empty($city) && empty($date) && empty($price_tier)) {
+            $featured_events = $this->fetch_featured_events();
+            if (!empty($featured_events) && !is_wp_error($featured_events)) {
+                echo $this->generate_featured_events_html($featured_events);
+            }
         }
         
         if (empty($events)) {
@@ -270,11 +283,26 @@ class EventsCMSDirectory {
         $data = json_decode($body, true);
         
         // API returns array directly
-        if (is_array($data)) {
-            return $data;
+        if (!is_array($data)) {
+            return array();
         }
         
-        return array();
+        // CLIENT-SIDE FILTER: Remove past events as backup
+        // (API should already filter, but this ensures clean data)
+        $now = new DateTime('now', new DateTimeZone('UTC'));
+        $filtered_events = array_filter($data, function($event) use ($now) {
+            if (empty($event['start_at'])) {
+                return false;
+            }
+            try {
+                $event_date = new DateTime($event['start_at']);
+                return $event_date >= $now;
+            } catch (Exception $e) {
+                return false;
+            }
+        });
+        
+        return array_values($filtered_events);
     }
     
     /**
@@ -298,6 +326,126 @@ class EventsCMSDirectory {
         $data = json_decode($body, true);
         
         return is_array($data) ? $data : array();
+    }
+    
+    /**
+     * Fetch featured events from API
+     */
+    private function fetch_featured_events() {
+        $url = $this->api_url . '/featured/active';
+        
+        $response = wp_remote_get($url, array(
+            'timeout' => 10,
+            'headers' => array(
+                'Accept' => 'application/json',
+            ),
+        ));
+        
+        if (is_wp_error($response)) {
+            return array();
+        }
+        
+        $body = wp_remote_retrieve_body($response);
+        $data = json_decode($body, true);
+        
+        return is_array($data) ? $data : array();
+    }
+    
+    /**
+     * Generate featured events HTML
+     */
+    private function generate_featured_events_html($featured_events) {
+        if (empty($featured_events)) {
+            return '';
+        }
+        
+        ob_start();
+        ?>
+        <div class="events-featured-section">
+            <div class="featured-header">
+                <h2 class="featured-title">✨ Featured Events</h2>
+                <p class="featured-subtitle">Premium spotlight events - Don't miss these!</p>
+            </div>
+            
+            <div class="events-featured-grid">
+                <?php foreach ($featured_events as $featured): 
+                    $tier_class = strtolower($featured['tier']);
+                ?>
+                    <div class="featured-card featured-<?php echo esc_attr($tier_class); ?>">
+                        <div class="featured-badge"><?php echo esc_html($featured['tier']); ?></div>
+                        
+                        <?php if (!empty($featured['event_image'])): ?>
+                            <div class="featured-image">
+                                <img src="<?php echo esc_url($featured['event_image']); ?>" 
+                                     alt="<?php echo esc_attr($featured['event_title']); ?>">
+                            </div>
+                        <?php endif; ?>
+                        
+                        <div class="featured-content">
+                            <h3 class="featured-event-title"><?php echo esc_html($featured['event_title']); ?></h3>
+                            
+                            <div class="featured-meta">
+                                <div class="featured-date">
+                                    <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <?php 
+                                    $date = new DateTime($featured['event_start']);
+                                    echo esc_html($date->format('F j, Y \a\t g:i A'));
+                                    ?>
+                                </div>
+                                
+                                <?php if (!empty($featured['event_venue'])): ?>
+                                    <div class="featured-venue">
+                                        <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
+                                        </svg>
+                                        <?php echo esc_html($featured['event_venue']); ?>
+                                        <?php if (!empty($featured['event_city'])): ?>
+                                            <span class="city">, <?php echo esc_html($featured['event_city']); ?></span>
+                                        <?php endif; ?>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                            
+                            <?php if (!empty($featured['event_description'])): ?>
+                                <div class="featured-description">
+                                    <?php echo wp_kses_post(wp_trim_words($featured['event_description'], 25)); ?>
+                                </div>
+                            <?php endif; ?>
+                            
+                            <div class="featured-footer">
+                                <?php if (!empty($featured['event_price_tier'])): ?>
+                                    <div class="featured-price">
+                                        <?php 
+                                        if ($featured['event_price_tier'] === 'free') {
+                                            echo '<span class="price-free">FREE</span>';
+                                        } else {
+                                            echo '<span class="price-paid">PAID</span>';
+                                            if (!empty($featured['event_price_amount'])) {
+                                                echo ' <span class="price-amount">$' . number_format($featured['event_price_amount'], 2) . '</span>';
+                                            }
+                                        }
+                                        ?>
+                                    </div>
+                                <?php endif; ?>
+                                
+                                <?php if (!empty($featured['event_source_url'])): ?>
+                                    <a href="<?php echo esc_url($featured['event_source_url']); ?>" 
+                                       class="featured-link" 
+                                       target="_blank" 
+                                       rel="noopener noreferrer">
+                                        View Details & Get Tickets →
+                                    </a>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+        <?php
+        return ob_get_clean();
     }
     
     /**
@@ -736,13 +884,18 @@ class EventsCMS_Upcoming_Events_Widget extends WP_Widget {
         }
         
         // Filter only upcoming events (start_at >= now)
-        $now = new DateTime();
+        // CRITICAL: Use UTC timezone to match API event dates
+        $now = new DateTime('now', new DateTimeZone('UTC'));
         $upcoming = array_filter($data, function($event) use ($now) {
             if (empty($event['start_at'])) {
                 return false;
             }
-            $event_date = new DateTime($event['start_at']);
-            return $event_date >= $now;
+            try {
+                $event_date = new DateTime($event['start_at']);
+                return $event_date >= $now;
+            } catch (Exception $e) {
+                return false;
+            }
         });
         
         // Sort by date (earliest first)
