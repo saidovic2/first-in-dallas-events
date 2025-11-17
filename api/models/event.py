@@ -50,6 +50,3 @@ class Event(Base):
     
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    
-    # Relationships
-    featured_slots = relationship("FeaturedSlot", back_populates="event", cascade="all, delete-orphan")

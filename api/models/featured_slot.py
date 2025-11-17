@@ -32,8 +32,8 @@ class FeaturedSlot(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     
-    # Relationships
-    event = relationship("Event", back_populates="featured_slots")
+    # Relationships (will be enabled after migration)
+    # event = relationship("Event", back_populates="featured_slots")
     
     __table_args__ = (
         CheckConstraint('slot_position BETWEEN 1 AND 4', name='check_slot_position'),
