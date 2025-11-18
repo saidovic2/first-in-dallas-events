@@ -12,22 +12,11 @@ def main():
     print("=" * 60)
     
     try:
-        # Connect using DATABASE_URL
+        # Connect using DATABASE_URL (Railway provides this automatically)
         database_url = os.environ.get('DATABASE_URL')
         if not database_url:
             print("❌ DATABASE_URL not found")
             sys.exit(1)
-        
-        # Replace internal hostname with public one if needed
-        if 'postgres.railway.internal' in database_url:
-            # Get public connection details
-            host = os.environ.get('PGHOST', 'shortline.proxy.rlwy.net')
-            port = os.environ.get('PGPORT', '49460')
-            database = os.environ.get('PGDATABASE', 'railway')
-            user = os.environ.get('PGUSER', 'postgres')
-            password = os.environ.get('PGPASSWORD')
-            
-            database_url = f"postgresql://{user}:{password}@{host}:{port}/{database}"
         
         print(f"📡 Connecting to database...")
         conn = psycopg2.connect(database_url)
