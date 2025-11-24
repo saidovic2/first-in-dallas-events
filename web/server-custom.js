@@ -5,7 +5,8 @@ const next = require('next');
 
 const dev = false; // Always production in Railway
 const hostname = '0.0.0.0';
-const port = parseInt(process.env.PORT || '3000', 10);
+// Force port 3000 to match Railway's networking configuration
+const port = 3000;
 
 const app = next({ dev, hostname, port, dir: __dirname });
 const handle = app.getRequestHandler();
