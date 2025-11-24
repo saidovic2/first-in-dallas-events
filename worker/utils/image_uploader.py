@@ -24,11 +24,16 @@ SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
 
 if SUPABASE_AVAILABLE and SUPABASE_URL and SUPABASE_KEY:
     try:
-        supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+        # Initialize Supabase without proxy argument (not supported in newer versions)
+        supabase = create_client(
+            supabase_url=SUPABASE_URL,
+            supabase_key=SUPABASE_KEY
+        )
         print("✅ Supabase client initialized for image storage")
     except Exception as e:
         supabase = None
         print(f"⚠️  Failed to initialize Supabase: {e}")
+        print(f"⚠️  Image uploads disabled - will use original URLs")
 else:
     supabase = None
     if not SUPABASE_AVAILABLE:
