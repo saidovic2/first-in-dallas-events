@@ -126,7 +126,7 @@ def process_task(task_data):
                         source_type=event_source_type,
                         category=event_data.get("category"),
                         fid_hash=fid_hash,
-                        status="DRAFT"
+                        status="PUBLISHED"  # Changed from DRAFT to PUBLISHED so events show on WordPress
                     )
                     db.add(event)
                     saved_count += 1

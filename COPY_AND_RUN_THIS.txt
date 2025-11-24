@@ -1,0 +1,19 @@
+============================================
+COPY THIS ENTIRE COMMAND AND RUN IT:
+============================================
+
+railway run --service wonderful-vibrancy sh -c "python -c \"import os; import urllib.request; import urllib.parse; import json; db_url = 'postgresql://'+os.environ['PGUSER']+':'+urllib.parse.quote_plus(os.environ['PGPASSWORD'])+'@'+os.environ['PGHOST']+':'+os.environ['PGPORT']+'/'+os.environ['PGDATABASE']; import psycopg2; conn = psycopg2.connect(db_url); conn.autocommit = True; cur = conn.cursor(); cur.execute('ALTER TABLE events ADD COLUMN IF NOT EXISTS is_featured BOOLEAN DEFAULT FALSE'); cur.execute('ALTER TABLE events ADD COLUMN IF NOT EXISTS featured_tier VARCHAR(20)'); cur.execute('ALTER TABLE events ADD COLUMN IF NOT EXISTS featured_until TIMESTAMP WITH TIME ZONE'); cur.execute('CREATE INDEX IF NOT EXISTS idx_events_featured ON events(is_featured, featured_until) WHERE is_featured = TRUE'); cur.execute(\\\"INSERT INTO featured_pricing (tier, slot_position, base_price_weekly, discount_monthly, discount_quarterly, discount_yearly, description, features) VALUES ('PLATINUM', 1, 149.00, 10, 20, 35, 'Top-left position', '{\\\\\\\"position\\\\\\\": \\\\\\\"Top-Left\\\\\\\"}'), ('GOLD', 2, 99.00, 10, 20, 35, 'Top-right position', '{\\\\\\\"position\\\\\\\": \\\\\\\"Top-Right\\\\\\\"}'), ('SILVER', 3, 69.00, 10, 20, 35, 'Bottom-left position', '{\\\\\\\"position\\\\\\\": \\\\\\\"Bottom-Left\\\\\\\"}'), ('BRONZE', 4, 49.00, 10, 20, 35, 'Bottom-right position', '{\\\\\\\"position\\\\\\\": \\\\\\\"Bottom-Right\\\\\\\"}')\"); cur.execute('SELECT tier, base_price_weekly FROM featured_pricing'); print('✅ Migration complete!'); [print(f'  - {r[0]}: ${r[1]}/week') for r in cur.fetchall()]; cur.close(); conn.close()\""
+
+============================================
+OR TRY THIS SIMPLER VERSION:
+============================================
+
+Just run these commands ONE BY ONE in PowerShell:
+
+1. railway link
+2. Select your project when prompted
+3. Then run:
+
+   railway run python -c "exec(open('apply_migration.py').read())"
+
+============================================
