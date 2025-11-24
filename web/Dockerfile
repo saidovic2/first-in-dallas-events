@@ -36,7 +36,9 @@ ENV NODE_ENV production
 ENV NEXT_TELEMETRY_DISABLED 1
 
 # Copy necessary files
-COPY --from=builder /app/public ./public
+# Create public dir and copy if exists (wildcards make it optional)
+RUN mkdir -p ./public
+COPY --from=builder --chown=node:node /app/public ./public 2>/dev/null || true
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
