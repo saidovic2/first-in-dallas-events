@@ -9,6 +9,12 @@ const nextConfig = {
       },
     ],
   },
+  // Disable static optimization for dashboard pages that require auth
+  experimental: {
+    missingSuspenseWithCSRBailout: false,
+  },
+  // Allow dynamic routes
+  output: 'standalone',
 }
 
 module.exports = nextConfig
