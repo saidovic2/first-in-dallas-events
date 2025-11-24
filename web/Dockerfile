@@ -41,8 +41,10 @@ RUN adduser --system --uid 1001 nextjs
 
 # Copy necessary files from builder
 COPY --from=builder /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/server-custom.js ./server-custom.js
 
 USER nextjs
 
@@ -52,5 +54,5 @@ EXPOSE 3000
 # Don't set PORT here - let Railway set it at runtime
 ENV HOSTNAME="0.0.0.0"
 
-# Start production server (Railway sets PORT automatically)
-CMD ["node", "server.js"]
+# Start production server with custom server
+CMD ["npm", "start"]

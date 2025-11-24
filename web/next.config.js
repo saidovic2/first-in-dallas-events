@@ -13,8 +13,8 @@ const nextConfig = {
   experimental: {
     missingSuspenseWithCSRBailout: false,
   },
-  // Allow dynamic routes
-  output: 'standalone',
+  // Don't use standalone mode - use custom server instead
+  // output: 'standalone',
   // Skip build errors for now - pages will render dynamically at runtime
   typescript: {
     ignoreBuildErrors: false,
