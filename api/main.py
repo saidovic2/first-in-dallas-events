@@ -24,6 +24,7 @@ app.add_middleware(
         "http://first-in-dallas.local",
         "https://first-in-dallas.local",
         "https://wonderful-vibrancy-production.up.railway.app",
+        "https://events-cms-frontend-production.up.railway.app",  # Frontend on Railway
         "*"  # Allow all origins in production (change to your domain when live)
     ],
     allow_credentials=True,
