@@ -36,12 +36,10 @@ ENV NODE_ENV production
 ENV NEXT_TELEMETRY_DISABLED 1
 
 # Copy necessary files
-# Copy public folder (create empty if doesn't exist)
-RUN mkdir -p ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
-# Try to copy public folder, but don't fail if it doesn't exist
-COPY --from=builder /app/public ./public/ || echo "No public folder"
+# Copy public folder (exists now with .gitkeep)
+COPY --from=builder /app/public ./public
 
 # Expose port (Railway will use $PORT)
 EXPOSE 3000
