@@ -11,8 +11,11 @@ RUN npm install
 # Copy application
 COPY . .
 
-# Expose port
+# Build Next.js app for production
+RUN npm run build
+
+# Expose port (Railway will use $PORT)
 EXPOSE 3000
 
-# Start development server
-CMD ["npm", "run", "dev"]
+# Start production server
+CMD ["npm", "run", "start"]
