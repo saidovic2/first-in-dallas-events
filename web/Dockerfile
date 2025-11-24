@@ -49,8 +49,8 @@ USER nextjs
 # Expose port (Railway will use $PORT)
 EXPOSE 3000
 
-ENV PORT=3000
+# Don't set PORT here - let Railway set it at runtime
 ENV HOSTNAME="0.0.0.0"
 
-# Start production server
+# Start production server (Railway sets PORT automatically)
 CMD ["node", "server.js"]
