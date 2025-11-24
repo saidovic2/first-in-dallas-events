@@ -36,11 +36,12 @@ ENV NODE_ENV production
 ENV NEXT_TELEMETRY_DISABLED 1
 
 # Copy necessary files
-# Create public dir and copy if exists (wildcards make it optional)
+# Copy public folder (create empty if doesn't exist)
 RUN mkdir -p ./public
-COPY --from=builder --chown=node:node /app/public ./public 2>/dev/null || true
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
+# Try to copy public folder, but don't fail if it doesn't exist
+COPY --from=builder /app/public ./public/ || echo "No public folder"
 
 # Expose port (Railway will use $PORT)
 EXPOSE 3000
