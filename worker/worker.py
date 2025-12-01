@@ -103,7 +103,7 @@ def process_task(task_data):
             if source_type == "eventbrite_bulk":
                 event_source_type = "eventbrite"
             elif source_type == "dallas_arboretum_bulk":
-                event_source_type = "dallas_arboretum"
+                event_source_type = "DALLAS_ARBORETUM"
             
             saved_count = 0
             for event_data in events:

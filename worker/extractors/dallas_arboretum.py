@@ -186,7 +186,7 @@ class DallasArboretumExtractor:
                 'price_amount': price_amount,
                 'image_url': image_url,
                 'source_url': event_url,
-                'source_type': 'dallas_arboretum',
+                'source_type': 'DALLAS_ARBORETUM',
                 'category': category,
                 'is_family_friendly': is_family_friendly,
                 'organizer': 'Dallas Arboretum & Botanical Garden'
