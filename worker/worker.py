@@ -75,6 +75,10 @@ def process_task(task_data):
             # Bulk Ticketmaster sync
             from extractors.ticketmaster import extract_ticketmaster_events
             events = extract_ticketmaster_events(city="Dallas", state="TX")
+        elif source_type == "dallas_arboretum_bulk" and url == "bulk:dallas_arboretum":
+            # Dallas Arboretum sync
+            from extractors.dallas_arboretum import extract_dallas_arboretum_events
+            events = extract_dallas_arboretum_events()
         # Try different extraction methods based on source type
         elif source_type == "ics":
             events = extract_ics(url)
@@ -98,6 +102,8 @@ def process_task(task_data):
             event_source_type = source_type
             if source_type == "eventbrite_bulk":
                 event_source_type = "eventbrite"
+            elif source_type == "dallas_arboretum_bulk":
+                event_source_type = "dallas_arboretum"
             
             saved_count = 0
             for event_data in events:

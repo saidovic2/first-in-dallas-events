@@ -112,6 +112,56 @@ async def sync_ticketmaster_dallas(
         print(f"Error in sync_ticketmaster_dallas: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.post("/dallas-arboretum")
+async def sync_dallas_arboretum(
+    background_tasks: BackgroundTasks,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Sync events from Dallas Arboretum & Botanical Garden
+    Focuses on family-friendly and kids events
+    """
+    try:
+        # Create a sync task
+        task_data = {
+            "url": "bulk:dallas_arboretum",
+            "source_type": "dallas_arboretum_bulk",
+            "status": "queued"
+        }
+        
+        # Add to Redis queue
+        task_id = redis_client.incr("task_counter")
+        redis_client.lpush("extraction_queue", json.dumps({
+            "task_id": task_id,
+            **task_data
+        }))
+        
+        # Save task to database
+        from models.task import Task
+        task = Task(
+            url=task_data["url"],
+            source_type=task_data["source_type"],
+            status=task_data["status"]
+        )
+        db.add(task)
+        db.commit()
+        
+        return {
+            "message": "Dallas Arboretum sync started",
+            "task_id": task.id,
+            "status": "queued",
+            "venue": "Dallas Arboretum & Botanical Garden",
+            "focus": "Family-friendly and kids events",
+            "categories": ["Nature & Gardens", "Family & Kids", "Education", "Holiday"]
+        }
+    
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        print(f"Error in sync_dallas_arboretum: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.get("/status")
 async def get_sync_status(
     current_user: User = Depends(get_current_user),
@@ -131,6 +181,10 @@ async def get_sync_status(
         
         ticketmaster_tasks = db.query(Task).filter(
             Task.source_type == "ticketmaster_bulk"
+        ).order_by(desc(Task.created_at)).limit(5).all()
+        
+        dallas_arboretum_tasks = db.query(Task).filter(
+            Task.source_type == "dallas_arboretum_bulk"
         ).order_by(desc(Task.created_at)).limit(5).all()
         
         return {
@@ -153,6 +207,16 @@ async def get_sync_status(
                     "logs": task.logs
                 }
                 for task in ticketmaster_tasks
+            ],
+            "dallas_arboretum": [
+                {
+                    "id": task.id,
+                    "status": task.status,
+                    "created_at": task.created_at.isoformat(),
+                    "completed_at": task.completed_at.isoformat() if task.completed_at else None,
+                    "logs": task.logs
+                }
+                for task in dallas_arboretum_tasks
             ]
         }
     

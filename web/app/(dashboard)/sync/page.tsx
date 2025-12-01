@@ -5,9 +5,10 @@ import { useRouter } from 'next/navigation'
 
 export default function BulkSyncPage() {
   const router = useRouter()
-  const [loading, setLoading] = useState<{eventbrite: boolean, ticketmaster: boolean}>({
+  const [loading, setLoading] = useState<{eventbrite: boolean, ticketmaster: boolean, dallasArboretum: boolean}>({
     eventbrite: false,
-    ticketmaster: false
+    ticketmaster: false,
+    dallasArboretum: false
   })
   const [status, setStatus] = useState<any>(null)
   const [message, setMessage] = useState<{type: 'success' | 'error' | 'info', text: string} | null>(null)
@@ -164,6 +165,49 @@ export default function BulkSyncPage() {
     }
   }
 
+  const syncDallasArboretumEvents = async () => {
+    setLoading(prev => ({ ...prev, dallasArboretum: true }))
+    setMessage(null)
+    setActiveTask(null)
+    
+    try {
+      const token = localStorage.getItem('token')
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001'
+      const response = await fetch(`${apiUrl}/api/sync/dallas-arboretum`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        setMessage({
+          type: 'info',
+          text: `🔄 Dallas Arboretum sync started! Fetching family-friendly events...`
+        })
+        
+        // Start polling for task status (every 3 seconds)
+        if (data.task_id) {
+          const interval = setInterval(() => pollTaskStatus(data.task_id), 3000)
+          setPollingInterval(interval)
+        }
+        
+        setTimeout(fetchSyncStatus, 2000)
+      } else {
+        throw new Error('Failed to start sync')
+      }
+    } catch (error: any) {
+      const errorMsg = error?.message || 'Unknown error'
+      setMessage({
+        type: 'error',
+        text: `❌ Error starting Dallas Arboretum sync: ${errorMsg}.`
+      })
+      setLoading(prev => ({ ...prev, dallasArboretum: false }))
+    }
+  }
+
   const getLastSync = (tasks: any[]) => {
     if (!tasks || tasks.length === 0) return 'Never'
     const latest = tasks[0]
@@ -192,7 +236,7 @@ export default function BulkSyncPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">📅 Bulk Event Import</h1>
           <p className="text-gray-600">
-            Import events from Eventbrite and Ticketmaster covering Dallas-Fort Worth area
+            Import events from Eventbrite, Ticketmaster, and Dallas Arboretum covering Dallas-Fort Worth area
           </p>
         </div>
 
@@ -303,7 +347,7 @@ export default function BulkSyncPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           {/* Eventbrite Sync Card */}
           <div className="bg-white border-2 border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-center mb-4">
@@ -411,6 +455,60 @@ export default function BulkSyncPage() {
               )}
             </button>
           </div>
+
+          {/* Dallas Arboretum Sync Card */}
+          <div className="bg-white border-2 border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center mb-4">
+              <div className="w-12 h-12 bg-pink-100 rounded-full flex items-center justify-center mr-4">
+                <span className="text-2xl">🌸</span>
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold">Dallas Arboretum</h2>
+                <p className="text-sm text-gray-500">Family & Kids Events</p>
+              </div>
+            </div>
+            
+            <div className="mb-4 text-sm text-gray-600">
+              <p className="mb-2">👨‍👩‍👧‍👦 <strong>Categories:</strong></p>
+              <ul className="list-disc list-inside ml-2 space-y-1">
+                <li>Family & Kids</li>
+                <li>Nature & Gardens</li>
+                <li>Educational Classes</li>
+                <li>Holiday Events</li>
+              </ul>
+              <p className="mt-3">📊 <strong>Expected:</strong> 10-30 events</p>
+              <p className="mt-1">⏱️ <strong>Duration:</strong> 15-30 seconds</p>
+            </div>
+
+            {status && status.dallas_arboretum && status.dallas_arboretum.length > 0 && (
+              <div className="mb-4 p-3 bg-gray-50 rounded text-sm">
+                <p className="text-gray-600">
+                  <strong>Last sync:</strong> {getLastSync(status.dallas_arboretum)}
+                </p>
+                <p className={`mt-1 ${getStatusColor(status.dallas_arboretum[0].status)}`}>
+                  <strong>Status:</strong> {status.dallas_arboretum[0].status}
+                </p>
+              </div>
+            )}
+
+            <button
+              onClick={syncDallasArboretumEvents}
+              disabled={loading.dallasArboretum}
+              className="w-full py-3 px-4 bg-pink-600 text-white font-semibold rounded-lg hover:bg-pink-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+            >
+              {loading.dallasArboretum ? (
+                <span className="flex items-center justify-center">
+                  <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                  </svg>
+                  Syncing...
+                </span>
+              ) : (
+                '🌸 Sync Dallas Arboretum'
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Info Section */}
@@ -422,7 +520,8 @@ export default function BulkSyncPage() {
             <li>• Events are automatically deduplicated - no worries about duplicates!</li>
             <li>• Eventbrite syncs from configured Dallas-area organizers</li>
             <li>• Ticketmaster covers concerts, sports, theatre, and family events</li>
-            <li>• You can run both syncs simultaneously</li>
+            <li>• Dallas Arboretum focuses on family-friendly and kids events</li>
+            <li>• You can run all syncs simultaneously</li>
             <li>• Check the Events page to see imported events</li>
           </ul>
         </div>
