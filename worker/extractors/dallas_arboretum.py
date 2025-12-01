@@ -124,7 +124,7 @@ class DallasArboretumExtractor:
                         city = locality
             
             # Extract price - Dallas Arboretum has general admission
-            price_tier = "paid"
+            price_tier = "PAID"
             price_amount = None
             
             offers = data.get('offers', {})
@@ -134,7 +134,7 @@ class DallasArboretumExtractor:
                     try:
                         price_float = float(price)
                         if price_float == 0:
-                            price_tier = "free"
+                            price_tier = "FREE"
                         else:
                             price_amount = str(price_float)
                     except:
@@ -142,7 +142,7 @@ class DallasArboretumExtractor:
             
             # Most Dallas Arboretum events require general admission
             # Set a note in description if no specific price
-            if not price_amount and price_tier == "paid":
+            if not price_amount and price_tier == "PAID":
                 price_amount = "17"  # General admission for adults
             
             # Extract image
@@ -160,7 +160,7 @@ class DallasArboretumExtractor:
             description = data.get('description', '')
             
             # Add admission note if not free
-            if price_tier == "paid" and description:
+            if price_tier == "PAID" and description:
                 if "admission" not in description.lower():
                     description = f"{description}\n\nGeneral admission to Dallas Arboretum applies."
             
@@ -182,7 +182,7 @@ class DallasArboretumExtractor:
                 'venue': venue,
                 'address': address,
                 'city': city,
-                'price_tier': price_tier.lower(),
+                'price_tier': price_tier,
                 'price_amount': price_amount,
                 'image_url': image_url,
                 'source_url': event_url,
