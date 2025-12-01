@@ -71,6 +71,8 @@ def download_and_save_image(image_url: str) -> Optional[str]:
         # Check if already uploaded to Supabase
         try:
             existing_url = supabase.storage.from_('events').get_public_url(filename)
+            # Clean up URL - remove trailing query string artifacts
+            existing_url = existing_url.rstrip('?')
             # Verify it exists
             check_response = requests.head(existing_url, timeout=5)
             if check_response.status_code == 200:
@@ -101,6 +103,8 @@ def download_and_save_image(image_url: str) -> Optional[str]:
         
         # Get public URL
         public_url = supabase.storage.from_('events').get_public_url(filename)
+        # Clean up URL - remove trailing query string artifacts
+        public_url = public_url.rstrip('?')
         print(f"✅ Image uploaded to Supabase: {public_url[:80]}...")
         return public_url
         
