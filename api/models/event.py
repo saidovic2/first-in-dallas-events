@@ -16,6 +16,7 @@ class SourceType(str, enum.Enum):
     ICS = "ics"
     RSS = "rss"
     MANUAL = "manual"
+    DALLAS_ARBORETUM = "DALLAS_ARBORETUM"
 
 class PriceTier(str, enum.Enum):
     FREE = "free"

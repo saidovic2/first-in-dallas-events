@@ -39,7 +39,7 @@ class Event(Base):
     price_amount = Column(Numeric(10, 2))
     image_url = Column(String)
     source_url = Column(String, nullable=False)
-    source_type = Column(ENUM('FACEBOOK', 'FACEBOOK_BULK', 'EVENTBRITE', 'EVENTBRITE_BULK', 'INSTAGRAM', 'WEBPAGE', 'ICS', 'RSS', 'MANUAL', 'facebook_bulk', 'eventbrite', 'eventbrite_bulk', name='sourcetype', create_type=True), nullable=False)
+    source_type = Column(ENUM('FACEBOOK', 'FACEBOOK_BULK', 'EVENTBRITE', 'EVENTBRITE_BULK', 'INSTAGRAM', 'WEBPAGE', 'ICS', 'RSS', 'MANUAL', 'facebook_bulk', 'eventbrite', 'eventbrite_bulk', 'DALLAS_ARBORETUM', 'dallas_arboretum', name='sourcetype', create_type=True), nullable=False)
     category = Column(String, index=True)
     fid_hash = Column(String, unique=True, index=True, nullable=False)
     status = Column(ENUM('DRAFT', 'PUBLISHED', name='eventstatus', create_type=True), default="DRAFT", nullable=False, index=True)
