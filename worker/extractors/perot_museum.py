@@ -63,16 +63,23 @@ class PerotMuseumExtractor:
         """Extract event URLs from the main events page"""
         event_urls = set()
         
-        # Look for links to event pages
+        # Look for links to event pages - be more specific
         for link in soup.find_all('a', href=True):
             href = link.get('href')
-            # Event pages typically contain /events/ in the URL
-            if href and ('/events/' in href or '/programs/' in href):
+            # Only get actual event detail pages, not category pages
+            if href and '/events/' in href:
+                # Skip navigation/category pages
+                if any(skip in href.lower() for skip in ['/events/adults', '/events/families', '/events/educators', '/events/teens', '/events?', 'category=', 'filter=']):
+                    continue
+                    
                 if href.startswith('/'):
                     href = self.base_url + href
                 elif not href.startswith('http'):
                     continue
-                event_urls.add(href)
+                    
+                # Only add if it looks like a real event detail page
+                if href != self.events_url and href != self.base_url + '/events':
+                    event_urls.add(href)
         
         return list(event_urls)
     
@@ -113,6 +120,7 @@ class PerotMuseumExtractor:
             start_date = data.get('startDate')
             
             if not title or not start_date:
+                print(f"      ⚠️  Missing required fields (title or date)")
                 return None
             
             description = data.get('description', '')
@@ -204,6 +212,7 @@ class PerotMuseumExtractor:
             date_match = re.search(date_pattern, date_text)
             
             if not date_match:
+                print(f"      ⚠️  No date found in HTML")
                 return None  # Skip if no date found
             
             start_at = date_parser.parse(date_match.group(1))

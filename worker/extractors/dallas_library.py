@@ -153,8 +153,21 @@ class DallasLibraryExtractor:
             meta_image = soup.find('meta', property='og:image')
             if meta_image:
                 image_url = meta_image.get('content')
-                if image_url and image_url.startswith('/'):
+                # Skip if it's the broken site logo
+                if image_url and 'lm_custom_site_theme/logo' in image_url:
+                    image_url = None
+                elif image_url and image_url.startswith('/'):
                     image_url = self.base_url + image_url
+            
+            # Use a placeholder if no image (library events often don't have images)
+            if not image_url:
+                # Category-based placeholder
+                if 'storytime' in title.lower() or 'story' in title.lower():
+                    image_url = 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400'  # Books
+                elif 'craft' in title.lower() or 'art' in title.lower():
+                    image_url = 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=400'  # Arts
+                else:
+                    image_url = 'https://images.unsplash.com/photo-1507842217343-583bb7270b66?w=400'  # Library
             
             # Categorize event
             category = self._categorize_event(title, description)
