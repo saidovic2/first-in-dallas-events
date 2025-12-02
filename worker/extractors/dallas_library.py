@@ -157,6 +157,7 @@ class DallasLibraryExtractor:
                 img = event_image_div.find('img')
                 if img and img.get('src'):
                     image_url = img.get('src')
+                    print(f"      📸 Found image via field-name-field-event-image")
             
             # Method 2: Look for any field-type-image
             if not image_url:
@@ -165,14 +166,20 @@ class DallasLibraryExtractor:
                     img = image_field.find('img')
                     if img and img.get('src'):
                         image_url = img.get('src')
+                        print(f"      📸 Found image via field-type-image")
             
-            # Method 3: Look for main content images
+            # Method 3: Look for main content images (first real image, not logo)
             if not image_url:
-                content_div = soup.find('div', class_='field-name-body') or soup.find('div', class_='content')
-                if content_div:
-                    img = content_div.find('img')
-                    if img and img.get('src'):
-                        image_url = img.get('src')
+                all_imgs = soup.find_all('img')
+                for img in all_imgs:
+                    src = img.get('src', '')
+                    # Skip logos and tiny images
+                    if src and 'logo' not in src.lower() and 'icon' not in src.lower():
+                        width = img.get('width', '999')
+                        if width and str(width).isdigit() and int(width) > 100:
+                            image_url = src
+                            print(f"      📸 Found image via content scan")
+                            break
             
             # Method 4: Meta image (but skip broken logo)
             if not image_url:
@@ -182,13 +189,33 @@ class DallasLibraryExtractor:
                     # Skip if it's the broken site logo
                     if image_url and 'lm_custom_site_theme/logo' in image_url:
                         image_url = None
+                        print(f"      ⚠️  Skipped broken logo")
             
             # Fix relative URLs
-            if image_url and image_url.startswith('/'):
-                image_url = self.base_url + image_url
+            if image_url:
+                if image_url.startswith('/'):
+                    image_url = self.base_url + image_url
+                print(f"      ✓ Image: {image_url[:60]}...")
+            else:
+                print(f"      ℹ️  No image found - will use category placeholder")
             
             # Categorize event
             category = self._categorize_event(title, description)
+            
+            # If no image found, use category-based placeholder
+            if not image_url:
+                category_images = {
+                    'Reading & Literacy': 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=800&q=80',  # Books
+                    'Arts & Crafts': 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=800&q=80',  # Art supplies
+                    'STEM & Technology': 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&q=80',  # Technology
+                    'Education & Learning': 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&q=80',  # Learning
+                    'Music & Performance': 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=800&q=80',  # Music
+                    'Teen & Youth': 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&q=80',  # Teens
+                    'Digital Literacy': 'https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=800&q=80',  # Computer
+                    'Community & Culture': 'https://images.unsplash.com/photo-1507842217343-583bb7270b66?w=800&q=80'  # Library
+                }
+                image_url = category_images.get(category, category_images['Community & Culture'])
+                print(f"      🎨 Using {category} placeholder")
             
             # Determine if family-friendly (most library events are!)
             is_family_friendly = self._is_family_friendly(title, description)
