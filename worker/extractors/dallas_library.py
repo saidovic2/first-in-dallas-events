@@ -131,6 +131,13 @@ class DallasLibraryExtractor:
             # Parse date
             try:
                 start_at = date_parser.parse(date_text)
+                
+                # Skip past events - only get upcoming events
+                from datetime import datetime, timezone
+                now = datetime.now(timezone.utc)
+                if start_at < now:
+                    print(f"      ⏭️  Skipping past event (date: {start_at.date()})")
+                    return None
             except:
                 return None
             

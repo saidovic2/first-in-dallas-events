@@ -127,6 +127,14 @@ class PerotMuseumExtractor:
             
             # Parse dates
             start_at = date_parser.parse(start_date)
+            
+            # Skip past events - only get upcoming events
+            from datetime import datetime, timezone
+            now = datetime.now(timezone.utc)
+            if start_at < now:
+                print(f"      ⏭️  Skipping past event (date: {start_at.date()})")
+                return None
+            
             end_at = None
             if data.get('endDate'):
                 try:
