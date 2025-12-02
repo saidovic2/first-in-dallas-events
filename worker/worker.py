@@ -99,6 +99,14 @@ def process_task(task_data):
             # Fair Park sync
             from extractors.fair_park import extract_fair_park_events
             events = extract_fair_park_events()
+        elif source_type == "house_of_blues_bulk" and url == "bulk:house_of_blues":
+            # House of Blues Dallas sync
+            from extractors.house_of_blues import extract_house_of_blues_events
+            events = extract_house_of_blues_events()
+        elif source_type == "factory_deep_ellum_bulk" and url == "bulk:factory_deep_ellum":
+            # Factory Deep Ellum sync
+            from extractors.factory_deep_ellum import extract_factory_deep_ellum_events
+            events = extract_factory_deep_ellum_events()
         # Try different extraction methods based on source type
         elif source_type == "ics":
             events = extract_ics(url)
@@ -134,6 +142,10 @@ def process_task(task_data):
                 event_source_type = "DALLAS_ZOO"
             elif source_type == "fair_park_bulk":
                 event_source_type = "FAIR_PARK"
+            elif source_type == "house_of_blues_bulk":
+                event_source_type = "HOUSE_OF_BLUES"
+            elif source_type == "factory_deep_ellum_bulk":
+                event_source_type = "FACTORY_DEEP_ELLUM"
             
             saved_count = 0
             skipped_count = 0

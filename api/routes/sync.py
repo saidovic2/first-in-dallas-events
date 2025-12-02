@@ -380,6 +380,90 @@ async def sync_fair_park(
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.post("/house-of-blues")
+async def sync_house_of_blues(
+    background_tasks: BackgroundTasks,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Sync events from House of Blues Dallas"""
+    try:
+        task_data = {
+            "url": "bulk:house_of_blues",
+            "source_type": "house_of_blues_bulk",
+            "status": "queued"
+        }
+        
+        task_id = redis_client.incr("task_counter")
+        redis_client.lpush("extraction_queue", json.dumps({
+            "task_id": task_id,
+            **task_data
+        }))
+        
+        from models.task import Task
+        task = Task(
+            url=task_data["url"],
+            source_type=task_data["source_type"],
+            status=task_data["status"]
+        )
+        db.add(task)
+        db.commit()
+        
+        return {
+            "message": "House of Blues Dallas sync started",
+            "task_id": task.id,
+            "status": "queued",
+            "venue": "House of Blues Dallas",
+            "focus": "Live music and entertainment",
+            "categories": ["Music & Performance", "Concerts", "Live Shows"]
+        }
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/factory-deep-ellum")
+async def sync_factory_deep_ellum(
+    background_tasks: BackgroundTasks,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Sync events from The Factory in Deep Ellum"""
+    try:
+        task_data = {
+            "url": "bulk:factory_deep_ellum",
+            "source_type": "factory_deep_ellum_bulk",
+            "status": "queued"
+        }
+        
+        task_id = redis_client.incr("task_counter")
+        redis_client.lpush("extraction_queue", json.dumps({
+            "task_id": task_id,
+            **task_data
+        }))
+        
+        from models.task import Task
+        task = Task(
+            url=task_data["url"],
+            source_type=task_data["source_type"],
+            status=task_data["status"]
+        )
+        db.add(task)
+        db.commit()
+        
+        return {
+            "message": "Factory Deep Ellum sync started",
+            "task_id": task.id,
+            "status": "queued",
+            "venue": "The Factory in Deep Ellum",
+            "focus": "Live music and entertainment",
+            "categories": ["Music & Performance", "Concerts", "Live Shows"]
+        }
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.get("/status")
 async def get_sync_status(
     current_user: User = Depends(get_current_user),

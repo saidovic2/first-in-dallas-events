@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 
 export default function BulkSyncPage() {
   const router = useRouter()
-  const [loading, setLoading] = useState<{eventbrite: boolean, ticketmaster: boolean, dallasArboretum: boolean, klydeWarrenPark: boolean, perotMuseum: boolean, dallasLibrary: boolean, dallasZoo: boolean, fairPark: boolean}>({
+  const [loading, setLoading] = useState<{eventbrite: boolean, ticketmaster: boolean, dallasArboretum: boolean, klydeWarrenPark: boolean, perotMuseum: boolean, dallasLibrary: boolean, dallasZoo: boolean, fairPark: boolean, houseOfBlues: boolean, factory: boolean}>({
     eventbrite: false,
     ticketmaster: false,
     dallasArboretum: false,
@@ -13,7 +13,9 @@ export default function BulkSyncPage() {
     perotMuseum: false,
     dallasLibrary: false,
     dallasZoo: false,
-    fairPark: false
+    fairPark: false,
+    houseOfBlues: false,
+    factory: false
   })
   const [status, setStatus] = useState<any>(null)
   const [message, setMessage] = useState<{type: 'success' | 'error' | 'info', text: string} | null>(null)
@@ -421,6 +423,90 @@ export default function BulkSyncPage() {
         text: `❌ Error starting Fair Park sync: ${errorMsg}.`
       })
       setLoading(prev => ({ ...prev, fairPark: false }))
+    }
+  }
+
+  const handleHouseOfBluesSync = async () => {
+    setLoading(prev => ({ ...prev, houseOfBlues: true }))
+    setMessage(null)
+    setActiveTask(null)
+    
+    try {
+      const token = localStorage.getItem('token')
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001'
+      const response = await fetch(`${apiUrl}/api/sync/house-of-blues`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        setMessage({
+          type: 'info',
+          text: `🔄 House of Blues sync started! Fetching live music events...`
+        })
+        
+        if (data.task_id) {
+          const interval = setInterval(() => pollTaskStatus(data.task_id), 3000)
+          setPollingInterval(interval)
+        }
+        
+        setTimeout(fetchSyncStatus, 2000)
+      } else {
+        throw new Error('Failed to start sync')
+      }
+    } catch (error: any) {
+      const errorMsg = error?.message || 'Unknown error'
+      setMessage({
+        type: 'error',
+        text: `❌ Error starting House of Blues sync: ${errorMsg}.`
+      })
+      setLoading(prev => ({ ...prev, houseOfBlues: false }))
+    }
+  }
+
+  const handleFactorySync = async () => {
+    setLoading(prev => ({ ...prev, factory: true }))
+    setMessage(null)
+    setActiveTask(null)
+    
+    try {
+      const token = localStorage.getItem('token')
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001'
+      const response = await fetch(`${apiUrl}/api/sync/factory-deep-ellum`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        setMessage({
+          type: 'info',
+          text: `🔄 Factory Deep Ellum sync started! Fetching music events...`
+        })
+        
+        if (data.task_id) {
+          const interval = setInterval(() => pollTaskStatus(data.task_id), 3000)
+          setPollingInterval(interval)
+        }
+        
+        setTimeout(fetchSyncStatus, 2000)
+      } else {
+        throw new Error('Failed to start sync')
+      }
+    } catch (error: any) {
+      const errorMsg = error?.message || 'Unknown error'
+      setMessage({
+        type: 'error',
+        text: `❌ Error starting Factory sync: ${errorMsg}.`
+      })
+      setLoading(prev => ({ ...prev, factory: false }))
     }
   }
 
@@ -991,6 +1077,110 @@ export default function BulkSyncPage() {
                 </span>
               ) : (
                 '🎡 Sync Fair Park'
+              )}
+            </button>
+          </div>
+
+          {/* House of Blues Sync Card */}
+          <div className="bg-white border-2 border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center mb-4">
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
+                <span className="text-2xl">🎸</span>
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold">House of Blues</h2>
+                <p className="text-sm text-gray-500">Live Music</p>
+              </div>
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center text-sm text-gray-600">
+                <span className="mr-2">📍</span>
+                <span>2200 N Lamar St</span>
+              </div>
+              <div className="flex items-center text-sm text-gray-600">
+                <span className="mr-2">🎭</span>
+                <span>Live concerts & shows</span>
+              </div>
+              <div className="flex items-center text-sm text-gray-600">
+                <span className="mr-2">💰</span>
+                <span className="font-semibold text-green-600">PAID</span>
+              </div>
+              <div className="flex items-center text-sm text-gray-600">
+                <span className="mr-2">👥</span>
+                <span>Ages 18+</span>
+              </div>
+              <div className="flex items-center text-sm text-gray-600">
+                <span className="mr-2">📅</span>
+                <span>20-40 concerts/month</span>
+              </div>
+            </div>
+            <button
+              onClick={handleHouseOfBluesSync}
+              disabled={loading.houseOfBlues}
+              className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+            >
+              {loading.houseOfBlues ? (
+                <span className="flex items-center justify-center">
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Syncing...
+                </span>
+              ) : (
+                '🎸 Sync House of Blues'
+              )}
+            </button>
+          </div>
+
+          {/* Factory Deep Ellum Sync Card */}
+          <div className="bg-white border-2 border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center mb-4">
+              <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mr-4">
+                <span className="text-2xl">🏭</span>
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold">Factory Deep Ellum</h2>
+                <p className="text-sm text-gray-500">Music Venue</p>
+              </div>
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center text-sm text-gray-600">
+                <span className="mr-2">📍</span>
+                <span>2713 Canton St</span>
+              </div>
+              <div className="flex items-center text-sm text-gray-600">
+                <span className="mr-2">🎭</span>
+                <span>Live music & entertainment</span>
+              </div>
+              <div className="flex items-center text-sm text-gray-600">
+                <span className="mr-2">💰</span>
+                <span className="font-semibold text-green-600">PAID</span>
+              </div>
+              <div className="flex items-center text-sm text-gray-600">
+                <span className="mr-2">👥</span>
+                <span>Ages 18+</span>
+              </div>
+              <div className="flex items-center text-sm text-gray-600">
+                <span className="mr-2">📅</span>
+                <span>15-30 shows/month</span>
+              </div>
+            </div>
+            <button
+              onClick={handleFactorySync}
+              disabled={loading.factory}
+              className="w-full mt-4 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+            >
+              {loading.factory ? (
+                <span className="flex items-center justify-center">
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Syncing...
+                </span>
+              ) : (
+                '🏭 Sync Factory'
               )}
             </button>
           </div>
