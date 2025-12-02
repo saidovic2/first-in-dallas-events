@@ -5,11 +5,15 @@ import { useRouter } from 'next/navigation'
 
 export default function BulkSyncPage() {
   const router = useRouter()
-  const [loading, setLoading] = useState<{eventbrite: boolean, ticketmaster: boolean, dallasArboretum: boolean, klydeWarrenPark: boolean}>({
+  const [loading, setLoading] = useState<{eventbrite: boolean, ticketmaster: boolean, dallasArboretum: boolean, klydeWarrenPark: boolean, perotMuseum: boolean, dallasLibrary: boolean, dallasZoo: boolean, fairPark: boolean}>({
     eventbrite: false,
     ticketmaster: false,
     dallasArboretum: false,
-    klydeWarrenPark: false
+    klydeWarrenPark: false,
+    perotMuseum: false,
+    dallasLibrary: false,
+    dallasZoo: false,
+    fairPark: false
   })
   const [status, setStatus] = useState<any>(null)
   const [message, setMessage] = useState<{type: 'success' | 'error' | 'info', text: string} | null>(null)
@@ -252,6 +256,174 @@ export default function BulkSyncPage() {
     }
   }
 
+  const syncPerotMuseum = async () => {
+    setLoading(prev => ({ ...prev, perotMuseum: true }))
+    setMessage(null)
+    setActiveTask(null)
+    
+    try {
+      const token = localStorage.getItem('token')
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001'
+      const response = await fetch(`${apiUrl}/api/sync/perot-museum`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        setMessage({
+          type: 'info',
+          text: `🔄 Perot Museum sync started! Fetching science events...`
+        })
+        
+        if (data.task_id) {
+          const interval = setInterval(() => pollTaskStatus(data.task_id), 3000)
+          setPollingInterval(interval)
+        }
+        
+        setTimeout(fetchSyncStatus, 2000)
+      } else {
+        throw new Error('Failed to start sync')
+      }
+    } catch (error: any) {
+      const errorMsg = error?.message || 'Unknown error'
+      setMessage({
+        type: 'error',
+        text: `❌ Error starting Perot Museum sync: ${errorMsg}.`
+      })
+      setLoading(prev => ({ ...prev, perotMuseum: false }))
+    }
+  }
+
+  const syncDallasLibrary = async () => {
+    setLoading(prev => ({ ...prev, dallasLibrary: true }))
+    setMessage(null)
+    setActiveTask(null)
+    
+    try {
+      const token = localStorage.getItem('token')
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001'
+      const response = await fetch(`${apiUrl}/api/sync/dallas-library`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        setMessage({
+          type: 'info',
+          text: `🔄 Dallas Public Library sync started! Fetching FREE events...`
+        })
+        
+        if (data.task_id) {
+          const interval = setInterval(() => pollTaskStatus(data.task_id), 3000)
+          setPollingInterval(interval)
+        }
+        
+        setTimeout(fetchSyncStatus, 2000)
+      } else {
+        throw new Error('Failed to start sync')
+      }
+    } catch (error: any) {
+      const errorMsg = error?.message || 'Unknown error'
+      setMessage({
+        type: 'error',
+        text: `❌ Error starting Dallas Library sync: ${errorMsg}.`
+      })
+      setLoading(prev => ({ ...prev, dallasLibrary: false }))
+    }
+  }
+
+  const syncDallasZoo = async () => {
+    setLoading(prev => ({ ...prev, dallasZoo: true }))
+    setMessage(null)
+    setActiveTask(null)
+    
+    try {
+      const token = localStorage.getItem('token')
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001'
+      const response = await fetch(`${apiUrl}/api/sync/dallas-zoo`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        setMessage({
+          type: 'info',
+          text: `🔄 Dallas Zoo sync started! Fetching animal events...`
+        })
+        
+        if (data.task_id) {
+          const interval = setInterval(() => pollTaskStatus(data.task_id), 3000)
+          setPollingInterval(interval)
+        }
+        
+        setTimeout(fetchSyncStatus, 2000)
+      } else {
+        throw new Error('Failed to start sync')
+      }
+    } catch (error: any) {
+      const errorMsg = error?.message || 'Unknown error'
+      setMessage({
+        type: 'error',
+        text: `❌ Error starting Dallas Zoo sync: ${errorMsg}.`
+      })
+      setLoading(prev => ({ ...prev, dallasZoo: false }))
+    }
+  }
+
+  const syncFairPark = async () => {
+    setLoading(prev => ({ ...prev, fairPark: true }))
+    setMessage(null)
+    setActiveTask(null)
+    
+    try {
+      const token = localStorage.getItem('token')
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001'
+      const response = await fetch(`${apiUrl}/api/sync/fair-park`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        setMessage({
+          type: 'info',
+          text: `🔄 Fair Park sync started! Fetching festival events...`
+        })
+        
+        if (data.task_id) {
+          const interval = setInterval(() => pollTaskStatus(data.task_id), 3000)
+          setPollingInterval(interval)
+        }
+        
+        setTimeout(fetchSyncStatus, 2000)
+      } else {
+        throw new Error('Failed to start sync')
+      }
+    } catch (error: any) {
+      const errorMsg = error?.message || 'Unknown error'
+      setMessage({
+        type: 'error',
+        text: `❌ Error starting Fair Park sync: ${errorMsg}.`
+      })
+      setLoading(prev => ({ ...prev, fairPark: false }))
+    }
+  }
+
   const getLastSync = (tasks: any[]) => {
     if (!tasks || tasks.length === 0) return 'Never'
     const latest = tasks[0]
@@ -280,7 +452,7 @@ export default function BulkSyncPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">📅 Bulk Event Import</h1>
           <p className="text-gray-600">
-            Import events from Eventbrite, Ticketmaster, Dallas Arboretum, and Klyde Warren Park covering Dallas-Fort Worth area
+            Import events from 8 family-friendly sources covering Dallas-Fort Worth area
           </p>
         </div>
 
@@ -608,6 +780,220 @@ export default function BulkSyncPage() {
               )}
             </button>
           </div>
+
+          {/* Perot Museum Sync Card */}
+          <div className="bg-white border-2 border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center mb-4">
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
+                <span className="text-2xl">🔬</span>
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold">Perot Museum</h2>
+                <p className="text-sm text-gray-500">Science & Education</p>
+              </div>
+            </div>
+            
+            <div className="mb-4 text-sm text-gray-600">
+              <p className="mb-2">🧪 <strong>Categories:</strong></p>
+              <ul className="list-disc list-inside ml-2 space-y-1">
+                <li>Education & Science</li>
+                <li>Family & Kids</li>
+                <li>Workshops</li>
+              </ul>
+              <p className="mt-3">📊 <strong>Expected:</strong> 20-30 events</p>
+              <p className="mt-1">⏱️ <strong>Duration:</strong> 30-60 seconds</p>
+            </div>
+
+            {status && status.perot_museum && status.perot_museum.length > 0 && (
+              <div className="mb-4 p-3 bg-gray-50 rounded text-sm">
+                <p className="text-gray-600">
+                  <strong>Last sync:</strong> {getLastSync(status.perot_museum)}
+                </p>
+                <p className={`mt-1 ${getStatusColor(status.perot_museum[0].status)}`}>
+                  <strong>Status:</strong> {status.perot_museum[0].status}
+                </p>
+              </div>
+            )}
+
+            <button
+              onClick={syncPerotMuseum}
+              disabled={loading.perotMuseum}
+              className="w-full py-3 px-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+            >
+              {loading.perotMuseum ? (
+                <span className="flex items-center justify-center">
+                  <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                  </svg>
+                  Syncing...
+                </span>
+              ) : (
+                '🔬 Sync Perot Museum'
+              )}
+            </button>
+          </div>
+
+          {/* Dallas Public Library Sync Card */}
+          <div className="bg-white border-2 border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center mb-4">
+              <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mr-4">
+                <span className="text-2xl">📚</span>
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold">Dallas Public Library</h2>
+                <p className="text-sm text-gray-500">FREE Events</p>
+              </div>
+            </div>
+            
+            <div className="mb-4 text-sm text-gray-600">
+              <p className="mb-2">📖 <strong>Categories:</strong></p>
+              <ul className="list-disc list-inside ml-2 space-y-1">
+                <li>Reading & Literacy</li>
+                <li>Arts & Crafts</li>
+                <li>STEM & Technology</li>
+                <li>Education</li>
+              </ul>
+              <p className="mt-3">📊 <strong>Expected:</strong> 50+ events</p>
+              <p className="mt-1">⏱️ <strong>Duration:</strong> 1-2 minutes</p>
+            </div>
+
+            {status && status.dallas_library && status.dallas_library.length > 0 && (
+              <div className="mb-4 p-3 bg-gray-50 rounded text-sm">
+                <p className="text-gray-600">
+                  <strong>Last sync:</strong> {getLastSync(status.dallas_library)}
+                </p>
+                <p className={`mt-1 ${getStatusColor(status.dallas_library[0].status)}`}>
+                  <strong>Status:</strong> {status.dallas_library[0].status}
+                </p>
+              </div>
+            )}
+
+            <button
+              onClick={syncDallasLibrary}
+              disabled={loading.dallasLibrary}
+              className="w-full py-3 px-4 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+            >
+              {loading.dallasLibrary ? (
+                <span className="flex items-center justify-center">
+                  <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                  </svg>
+                  Syncing...
+                </span>
+              ) : (
+                '📚 Sync Dallas Library'
+              )}
+            </button>
+          </div>
+
+          {/* Dallas Zoo Sync Card */}
+          <div className="bg-white border-2 border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center mb-4">
+              <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mr-4">
+                <span className="text-2xl">🦁</span>
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold">Dallas Zoo</h2>
+                <p className="text-sm text-gray-500">Animals & Nature</p>
+              </div>
+            </div>
+            
+            <div className="mb-4 text-sm text-gray-600">
+              <p className="mb-2">🐘 <strong>Categories:</strong></p>
+              <ul className="list-disc list-inside ml-2 space-y-1">
+                <li>Animals & Nature</li>
+                <li>Family & Kids</li>
+                <li>Education</li>
+              </ul>
+              <p className="mt-3">📊 <strong>Expected:</strong> 10-20 events</p>
+              <p className="mt-1">⏱️ <strong>Duration:</strong> 20-40 seconds</p>
+            </div>
+
+            {status && status.dallas_zoo && status.dallas_zoo.length > 0 && (
+              <div className="mb-4 p-3 bg-gray-50 rounded text-sm">
+                <p className="text-gray-600">
+                  <strong>Last sync:</strong> {getLastSync(status.dallas_zoo)}
+                </p>
+                <p className={`mt-1 ${getStatusColor(status.dallas_zoo[0].status)}`}>
+                  <strong>Status:</strong> {status.dallas_zoo[0].status}
+                </p>
+              </div>
+            )}
+
+            <button
+              onClick={syncDallasZoo}
+              disabled={loading.dallasZoo}
+              className="w-full py-3 px-4 bg-orange-600 text-white font-semibold rounded-lg hover:bg-orange-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+            >
+              {loading.dallasZoo ? (
+                <span className="flex items-center justify-center">
+                  <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                  </svg>
+                  Syncing...
+                </span>
+              ) : (
+                '🦁 Sync Dallas Zoo'
+              )}
+            </button>
+          </div>
+
+          {/* Fair Park Sync Card */}
+          <div className="bg-white border-2 border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center mb-4">
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mr-4">
+                <span className="text-2xl">🎡</span>
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold">Fair Park</h2>
+                <p className="text-sm text-gray-500">Festivals & Cultural</p>
+              </div>
+            </div>
+            
+            <div className="mb-4 text-sm text-gray-600">
+              <p className="mb-2">🎪 <strong>Categories:</strong></p>
+              <ul className="list-disc list-inside ml-2 space-y-1">
+                <li>Festivals & Fairs</li>
+                <li>Cultural Events</li>
+                <li>Music & Concerts</li>
+                <li>Sports</li>
+              </ul>
+              <p className="mt-3">📊 <strong>Expected:</strong> 30-40 events</p>
+              <p className="mt-1">⏱️ <strong>Duration:</strong> 30-60 seconds</p>
+            </div>
+
+            {status && status.fair_park && status.fair_park.length > 0 && (
+              <div className="mb-4 p-3 bg-gray-50 rounded text-sm">
+                <p className="text-gray-600">
+                  <strong>Last sync:</strong> {getLastSync(status.fair_park)}
+                </p>
+                <p className={`mt-1 ${getStatusColor(status.fair_park[0].status)}`}>
+                  <strong>Status:</strong> {status.fair_park[0].status}
+                </p>
+              </div>
+            )}
+
+            <button
+              onClick={syncFairPark}
+              disabled={loading.fairPark}
+              className="w-full py-3 px-4 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+            >
+              {loading.fairPark ? (
+                <span className="flex items-center justify-center">
+                  <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                  </svg>
+                  Syncing...
+                </span>
+              ) : (
+                '🎡 Sync Fair Park'
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Info Section */}
@@ -617,12 +1003,12 @@ export default function BulkSyncPage() {
           </h3>
           <ul className="space-y-2 text-sm text-gray-700">
             <li>• Events are automatically deduplicated - no worries about duplicates!</li>
-            <li>• Eventbrite syncs from configured Dallas-area organizers</li>
-            <li>• Ticketmaster covers concerts, sports, theatre, and family events</li>
-            <li>• Dallas Arboretum focuses on family-friendly and kids events</li>
-            <li>• Klyde Warren Park features community events, movies, music, and more</li>
-            <li>• You can run all syncs simultaneously</li>
-            <li>• Check the Events page to see imported events</li>
+            <li>• Eventbrite & Ticketmaster provide large-scale event coverage</li>
+            <li>• Dallas Arboretum, Klyde Warren Park, Perot Museum - Educational & nature events</li>
+            <li>• Dallas Public Library - 100% FREE events for all ages</li>
+            <li>• Dallas Zoo & Fair Park - Special events and seasonal festivals</li>
+            <li>• All 8 sources can run simultaneously without conflicts</li>
+            <li>• Check the Events page to see all imported events</li>
           </ul>
         </div>
 
