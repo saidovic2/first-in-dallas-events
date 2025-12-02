@@ -168,7 +168,13 @@ class DallasLibraryExtractor:
                 print(f"         - Found img: {src[:80] if src else 'NO SRC'}")
                 
                 # Look for real uploaded images (stored in /sites/default/files/)
-                if '/sites/default/files/' in src and 'logo' not in src.lower():
+                if '/sites/default/files/' in src:
+                    # Skip logos and generic branding
+                    if any(skip in src for skip in ['logo', 'Logo', 'DPL%20Horizontal', 'DPL Horizontal']):
+                        print(f"            ⏭️  Skipping logo/branding image")
+                        continue
+                    
+                    # Found a real event image!
                     image_url = src
                     print(f"      📸 ✅ MATCHED real event image in /sites/default/files/")
                     break
