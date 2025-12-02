@@ -136,17 +136,23 @@ def process_task(task_data):
                 event_source_type = "FAIR_PARK"
             
             saved_count = 0
+            skipped_count = 0
+            
             for event_data in events:
-                # Process external images - upload to Supabase Storage
-                event_data = process_event_image(event_data)
-                
-                # Generate unique hash
-                hash_string = f"{event_data['title']}{event_data['start_at']}{url}"
-                fid_hash = hashlib.md5(hash_string.encode()).hexdigest()
-                
-                # Check if event already exists
-                existing = db.query(Event).filter(Event.fid_hash == fid_hash).first()
-                if not existing:
+                try:
+                    # Process external images - upload to Supabase Storage
+                    event_data = process_event_image(event_data)
+                    
+                    # Generate unique hash
+                    hash_string = f"{event_data['title']}{event_data['start_at']}{url}"
+                    fid_hash = hashlib.md5(hash_string.encode()).hexdigest()
+                    
+                    # Check if event already exists
+                    existing = db.query(Event).filter(Event.fid_hash == fid_hash).first()
+                    if existing:
+                        skipped_count += 1
+                        continue
+                    
                     event = Event(
                         title=event_data["title"],
                         description=event_data.get("description"),
@@ -165,16 +171,29 @@ def process_task(task_data):
                         status="DRAFT"  # Save as DRAFT first, user can publish from CMS
                     )
                     db.add(event)
+                    db.flush()  # Flush to detect unique constraint violations early
                     saved_count += 1
+                    
+                except Exception as e:
+                    # If this event fails (e.g., duplicate), rollback and continue with next
+                    db.rollback()
+                    print(f"⚠️  Skipped event '{event_data.get('title', 'Unknown')}': {str(e)[:100]}")
+                    skipped_count += 1
+                    continue
             
-            db.commit()
+            try:
+                db.commit()
+            except Exception as e:
+                db.rollback()
+                print(f"⚠️  Commit error (some events may have been saved): {str(e)[:100]}")
             
+            log_message = f"Extracted {len(events)} events: {saved_count} saved, {skipped_count} skipped (duplicates)"
             update_task_status(
                 db, task_id, "done",
-                logs=f"Successfully extracted {len(events)} events, saved {saved_count} new events",
+                logs=log_message,
                 events_extracted=saved_count
             )
-            print(f"✓ Task {task_id} completed: {saved_count} events saved")
+            print(f"✓ Task {task_id} completed: {saved_count} new, {skipped_count} duplicates")
         else:
             update_task_status(
                 db, task_id, "failed",
