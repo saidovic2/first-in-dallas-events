@@ -88,6 +88,8 @@ class DallasZooExtractor:
             
             # Try JSON-LD first
             json_ld_scripts = soup.find_all('script', type='application/ld+json')
+            print(f"      🔍 Found {len(json_ld_scripts)} JSON-LD scripts")
+            
             for script in json_ld_scripts:
                 try:
                     data = json.loads(script.string)
@@ -95,11 +97,14 @@ class DallasZooExtractor:
                     
                     for item in items:
                         if item.get('@type') == 'Event':
+                            print(f"      📋 Found Event in JSON-LD")
                             return self._parse_json_ld_event(item, url)
-                except:
+                except Exception as e:
+                    print(f"      ⚠️  JSON-LD parse error: {str(e)[:40]}")
                     continue
             
             # Fallback to HTML parsing
+            print(f"      📄 No JSON-LD found, trying HTML parsing...")
             return self._parse_html_event(soup, url)
             
         except Exception as e:
@@ -113,6 +118,7 @@ class DallasZooExtractor:
             start_date = data.get('startDate')
             
             if not title or not start_date:
+                print(f"      ⚠️  Missing title or date (title={title}, date={start_date})")
                 return None
             
             description = data.get('description', '')
@@ -192,8 +198,10 @@ class DallasZooExtractor:
             # Get title
             title_elem = soup.find('h1')
             if not title_elem:
+                print(f"      ⚠️  No H1 title found in HTML")
                 return None
             title = title_elem.get_text(strip=True)
+            print(f"      📌 Title: {title[:50]}")
             
             # Get description
             description = ''
@@ -215,6 +223,7 @@ class DallasZooExtractor:
             
             if date_match:
                 start_at = date_parser.parse(date_match.group(1))
+                print(f"      📅 Found date: {date_match.group(1)}")
             elif season_match:
                 # Use current year and season start
                 season = season_match.group(1).lower()
@@ -227,8 +236,10 @@ class DallasZooExtractor:
                     'holiday': f'December 1, {year}'
                 }
                 start_at = date_parser.parse(season_dates.get(season, f'January 1, {year}'))
+                print(f"      📅 Found seasonal date: {season} {year}")
             else:
                 # Skip if no date found
+                print(f"      ⚠️  No date found in HTML content")
                 return None
             
             # Skip past events - keep today and future events
