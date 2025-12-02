@@ -18,6 +18,10 @@ class SourceType(str, enum.Enum):
     MANUAL = "manual"
     DALLAS_ARBORETUM = "DALLAS_ARBORETUM"
     KLYDE_WARREN_PARK = "KLYDE_WARREN_PARK"
+    PEROT_MUSEUM = "PEROT_MUSEUM"
+    DALLAS_LIBRARY = "DALLAS_LIBRARY"
+    DALLAS_ZOO = "DALLAS_ZOO"
+    FAIR_PARK = "FAIR_PARK"
 
 class PriceTier(str, enum.Enum):
     FREE = "free"

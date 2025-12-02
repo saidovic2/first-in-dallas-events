@@ -83,6 +83,22 @@ def process_task(task_data):
             # Klyde Warren Park sync
             from extractors.klyde_warren_park import extract_klyde_warren_park_events
             events = extract_klyde_warren_park_events()
+        elif source_type == "perot_museum_bulk" and url == "bulk:perot_museum":
+            # Perot Museum sync
+            from extractors.perot_museum import extract_perot_museum_events
+            events = extract_perot_museum_events()
+        elif source_type == "dallas_library_bulk" and url == "bulk:dallas_library":
+            # Dallas Public Library sync
+            from extractors.dallas_library import extract_dallas_library_events
+            events = extract_dallas_library_events()
+        elif source_type == "dallas_zoo_bulk" and url == "bulk:dallas_zoo":
+            # Dallas Zoo sync
+            from extractors.dallas_zoo import extract_dallas_zoo_events
+            events = extract_dallas_zoo_events()
+        elif source_type == "fair_park_bulk" and url == "bulk:fair_park":
+            # Fair Park sync
+            from extractors.fair_park import extract_fair_park_events
+            events = extract_fair_park_events()
         # Try different extraction methods based on source type
         elif source_type == "ics":
             events = extract_ics(url)
@@ -110,6 +126,14 @@ def process_task(task_data):
                 event_source_type = "DALLAS_ARBORETUM"
             elif source_type == "klyde_warren_park_bulk":
                 event_source_type = "KLYDE_WARREN_PARK"
+            elif source_type == "perot_museum_bulk":
+                event_source_type = "PEROT_MUSEUM"
+            elif source_type == "dallas_library_bulk":
+                event_source_type = "DALLAS_LIBRARY"
+            elif source_type == "dallas_zoo_bulk":
+                event_source_type = "DALLAS_ZOO"
+            elif source_type == "fair_park_bulk":
+                event_source_type = "FAIR_PARK"
             
             saved_count = 0
             for event_data in events:
