@@ -148,26 +148,44 @@ class DallasLibraryExtractor:
             if address_elem:
                 address = address_elem.get_text(strip=True)
             
-            # Get image
+            # Get image - try multiple methods to find real event images
             image_url = None
-            meta_image = soup.find('meta', property='og:image')
-            if meta_image:
-                image_url = meta_image.get('content')
-                # Skip if it's the broken site logo
-                if image_url and 'lm_custom_site_theme/logo' in image_url:
-                    image_url = None
-                elif image_url and image_url.startswith('/'):
-                    image_url = self.base_url + image_url
             
-            # Use a placeholder if no image (library events often don't have images)
+            # Method 1: Look for event image field (common in library CMS)
+            event_image_div = soup.find('div', class_='field-name-field-event-image')
+            if event_image_div:
+                img = event_image_div.find('img')
+                if img and img.get('src'):
+                    image_url = img.get('src')
+            
+            # Method 2: Look for any field-type-image
             if not image_url:
-                # Category-based placeholder
-                if 'storytime' in title.lower() or 'story' in title.lower():
-                    image_url = 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400'  # Books
-                elif 'craft' in title.lower() or 'art' in title.lower():
-                    image_url = 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=400'  # Arts
-                else:
-                    image_url = 'https://images.unsplash.com/photo-1507842217343-583bb7270b66?w=400'  # Library
+                image_field = soup.find('div', class_='field-type-image')
+                if image_field:
+                    img = image_field.find('img')
+                    if img and img.get('src'):
+                        image_url = img.get('src')
+            
+            # Method 3: Look for main content images
+            if not image_url:
+                content_div = soup.find('div', class_='field-name-body') or soup.find('div', class_='content')
+                if content_div:
+                    img = content_div.find('img')
+                    if img and img.get('src'):
+                        image_url = img.get('src')
+            
+            # Method 4: Meta image (but skip broken logo)
+            if not image_url:
+                meta_image = soup.find('meta', property='og:image')
+                if meta_image:
+                    image_url = meta_image.get('content')
+                    # Skip if it's the broken site logo
+                    if image_url and 'lm_custom_site_theme/logo' in image_url:
+                        image_url = None
+            
+            # Fix relative URLs
+            if image_url and image_url.startswith('/'):
+                image_url = self.base_url + image_url
             
             # Categorize event
             category = self._categorize_event(title, description)
