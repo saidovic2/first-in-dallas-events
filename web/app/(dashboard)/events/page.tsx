@@ -427,12 +427,17 @@ export default function EventsPage() {
                     </button>
                   </div>
                   {event.image_url && (
-                    <div className="relative w-48 h-32 flex-shrink-0 rounded-lg overflow-hidden">
+                    <div className="relative w-48 h-32 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
                       <Image
                         src={event.image_url}
                         alt={event.title}
                         fill
                         className="object-cover"
+                        unoptimized
+                        onError={(e) => {
+                          console.error('Image load error:', event.image_url);
+                          e.currentTarget.style.display = 'none';
+                        }}
                       />
                     </div>
                   )}
