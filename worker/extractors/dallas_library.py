@@ -161,12 +161,16 @@ class DallasLibraryExtractor:
             
             # Method 1: Look for images in /sites/default/files/ (real uploaded event images)
             all_imgs = soup.find_all('img')
+            print(f"      🔍 Scanning {len(all_imgs)} images on page...")
+            
             for img in all_imgs:
                 src = img.get('src', '')
+                print(f"         - Found img: {src[:80] if src else 'NO SRC'}")
+                
                 # Look for real uploaded images (stored in /sites/default/files/)
                 if '/sites/default/files/' in src and 'logo' not in src.lower():
                     image_url = src
-                    print(f"      📸 Found real event image in /sites/default/files/")
+                    print(f"      📸 ✅ MATCHED real event image in /sites/default/files/")
                     break
             
             # Method 2: Look for event image field (common in library CMS)
