@@ -119,10 +119,11 @@ class FairParkExtractor:
             # Parse dates
             start_at = date_parser.parse(start_date)
             
-            # Skip past events - only get upcoming events
+            # Skip past events - keep today and future events
             from datetime import datetime, timezone
             now = datetime.now(timezone.utc)
-            if start_at < now:
+            # Compare dates only (not time) - keep today's events
+            if start_at.date() < now.date():
                 print(f"      ⏭️  Skipping past event (date: {start_at.date()})")
                 return None
             
@@ -218,10 +219,11 @@ class FairParkExtractor:
             try:
                 start_at = date_parser.parse(date_match.group(1))
                 
-                # Skip past events - only get upcoming events
+                # Skip past events - keep today and future events
                 from datetime import datetime, timezone
                 now = datetime.now(timezone.utc)
-                if start_at < now:
+                # Compare dates only (not time) - keep today's events
+                if start_at.date() < now.date():
                     print(f"      ⏭️  Skipping past event (date: {start_at.date()})")
                     return None
             except:
