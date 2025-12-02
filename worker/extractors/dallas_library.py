@@ -213,12 +213,12 @@ class DallasLibraryExtractor:
             if image_url:
                 if image_url.startswith('/'):
                     image_url = self.base_url + image_url
-                # Verify it's not just the site logo
-                if 'lm_custom' not in image_url and 'logo' not in image_url.lower():
-                    print(f"      ✓ Image: {image_url[:60]}...")
-                else:
-                    print(f"      ⚠️  Rejected logo/branding image")
+                # Only reject the specific broken site logo
+                if 'lm_custom_site_theme/logo' in image_url:
+                    print(f"      ⚠️  Rejected site logo")
                     image_url = None
+                else:
+                    print(f"      ✓ Image: {image_url[:60]}...")
             
             if not image_url:
                 print(f"      ℹ️  No event image found - will be set to null")
