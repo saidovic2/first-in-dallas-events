@@ -16,6 +16,7 @@ class DallasArboretumExtractor:
     
     def __init__(self):
         self.base_url = 'https://www.dallasarboretum.org'
+        self.calendar_url = f'{self.base_url}/events-activities/calendar/'
         self.events_url = f'{self.base_url}/events-activities/'
         
         # Family-friendly keywords to prioritize
@@ -27,16 +28,45 @@ class DallasArboretumExtractor:
     
     def fetch_events(self) -> List[Dict]:
         """
-        Fetch all events from Dallas Arboretum
+        Fetch all events from Dallas Arboretum calendar
         
         Returns:
             List of event dictionaries
         """
-        print(f"🌸 Fetching Dallas Arboretum events...")
+        print(f"🌸 Fetching Dallas Arboretum events from calendar...")
         
         try:
+            # Step 1: Get calendar page to find all event URLs
+            event_urls = self._scrape_calendar_page()
+            print(f"📅 Found {len(event_urls)} events in calendar")
+            
+            # Step 2: Fetch details for each event (limit to prevent overload)
+            max_events = 50  # Reasonable limit
+            events = []
+            
+            for i, url in enumerate(event_urls[:max_events], 1):
+                print(f"   [{i}/{min(len(event_urls), max_events)}] Fetching: {url.split('/')[-2]}...")
+                event_data = self._fetch_event_details(url)
+                if event_data:
+                    events.append(event_data)
+            
+            print(f"✅ Successfully parsed {len(events)} Dallas Arboretum events")
+            return events
+            
+        except Exception as e:
+            print(f"❌ Error fetching Dallas Arboretum events: {e}")
+            return []
+    
+    def _scrape_calendar_page(self) -> List[str]:
+        """
+        Scrape the calendar page to get all event URLs
+        
+        Returns:
+            List of event detail page URLs
+        """
+        try:
             response = requests.get(
-                self.events_url,
+                self.calendar_url,
                 timeout=30,
                 headers={
                     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
@@ -46,10 +76,52 @@ class DallasArboretumExtractor:
             
             soup = BeautifulSoup(response.text, 'html.parser')
             
-            # Find all JSON-LD scripts
+            # Find all "Learn More" links to event detail pages
+            event_urls = set()  # Use set to avoid duplicates
+            
+            # Look for links containing /event/ in the href
+            event_links = soup.find_all('a', href=lambda x: x and '/event/' in x)
+            
+            for link in event_links:
+                href = link.get('href')
+                # Make absolute URL if relative
+                if href.startswith('/'):
+                    href = self.base_url + href
+                # Only add if it's an event detail page
+                if '/event/' in href and href not in event_urls:
+                    event_urls.add(href)
+            
+            return list(event_urls)
+            
+        except Exception as e:
+            print(f"⚠️  Error scraping calendar: {e}")
+            return []
+    
+    def _fetch_event_details(self, url: str) -> Optional[Dict]:
+        """
+        Fetch full event details from an individual event page
+        
+        Args:
+            url: Event detail page URL
+            
+        Returns:
+            Parsed event dictionary or None
+        """
+        try:
+            response = requests.get(
+                url,
+                timeout=15,
+                headers={
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                }
+            )
+            response.raise_for_status()
+            
+            soup = BeautifulSoup(response.text, 'html.parser')
+            
+            # Find JSON-LD data (most reliable)
             json_ld_scripts = soup.find_all('script', type='application/ld+json')
             
-            raw_events = []
             for script in json_ld_scripts:
                 try:
                     data = json.loads(script.string)
@@ -61,26 +133,16 @@ class DallasArboretumExtractor:
                         # Check if it's an Event type
                         item_type = item.get('@type', '')
                         if item_type == 'Event' or (isinstance(item_type, list) and 'Event' in item_type):
-                            raw_events.append(item)
+                            return self._parse_event(item)
                 
                 except json.JSONDecodeError:
                     continue
             
-            print(f"✅ Found {len(raw_events)} raw events from Dallas Arboretum")
+            return None
             
-            # Parse events
-            events = []
-            for event in raw_events:
-                parsed = self._parse_event(event)
-                if parsed:
-                    events.append(parsed)
-            
-            print(f"✅ Successfully parsed {len(events)} Dallas Arboretum events")
-            return events
-            
-        except requests.exceptions.RequestException as e:
-            print(f"❌ Error fetching Dallas Arboretum events: {e}")
-            return []
+        except Exception as e:
+            print(f"      ⚠️  Error fetching {url}: {str(e)[:50]}")
+            return None
     
     def _parse_event(self, data: Dict) -> Optional[Dict]:
         """Parse a single JSON-LD Event object from Dallas Arboretum"""
