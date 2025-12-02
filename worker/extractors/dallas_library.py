@@ -159,15 +159,26 @@ class DallasLibraryExtractor:
             # Get image - try multiple methods to find real event images
             image_url = None
             
-            # Method 1: Look for event image field (common in library CMS)
-            event_image_div = soup.find('div', class_='field-name-field-event-image')
-            if event_image_div:
-                img = event_image_div.find('img')
-                if img and img.get('src'):
-                    image_url = img.get('src')
-                    print(f"      📸 Found image via field-name-field-event-image")
+            # Method 1: Look for images in /sites/default/files/ (real uploaded event images)
+            all_imgs = soup.find_all('img')
+            for img in all_imgs:
+                src = img.get('src', '')
+                # Look for real uploaded images (stored in /sites/default/files/)
+                if '/sites/default/files/' in src and 'logo' not in src.lower():
+                    image_url = src
+                    print(f"      📸 Found real event image in /sites/default/files/")
+                    break
             
-            # Method 2: Look for any field-type-image
+            # Method 2: Look for event image field (common in library CMS)
+            if not image_url:
+                event_image_div = soup.find('div', class_='field-name-field-event-image')
+                if event_image_div:
+                    img = event_image_div.find('img')
+                    if img and img.get('src'):
+                        image_url = img.get('src')
+                        print(f"      📸 Found image via field-name-field-event-image")
+            
+            # Method 3: Look for any field-type-image
             if not image_url:
                 image_field = soup.find('div', class_='field-type-image')
                 if image_field:
@@ -176,9 +187,8 @@ class DallasLibraryExtractor:
                         image_url = img.get('src')
                         print(f"      📸 Found image via field-type-image")
             
-            # Method 3: Look for main content images (first real image, not logo)
+            # Method 4: Content images (excluding logos)
             if not image_url:
-                all_imgs = soup.find_all('img')
                 for img in all_imgs:
                     src = img.get('src', '')
                     # Skip logos and tiny images
@@ -189,7 +199,7 @@ class DallasLibraryExtractor:
                             print(f"      📸 Found image via content scan")
                             break
             
-            # Method 4: Meta image (but skip broken logo)
+            # Method 5: Meta image (but skip broken logo)
             if not image_url:
                 meta_image = soup.find('meta', property='og:image')
                 if meta_image:
