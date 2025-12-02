@@ -213,13 +213,24 @@ class DallasZooExtractor:
             # Try to extract date info from page
             text = soup.get_text()
             
-            # Look for date patterns
-            date_pattern = r'([A-Za-z]+\s+\d{1,2},\s+\d{4})'
-            date_match = re.search(date_pattern, text)
+            # Look for date patterns (multiple formats)
+            date_patterns = [
+                r'([A-Za-z]+\s+\d{1,2},\s+\d{4})',  # "November 15, 2025"
+                r'(\d{1,2}/\d{1,2}/\d{4})',  # "11/15/2025"
+                r'([A-Za-z]+\s+\d{1,2}-\d{1,2},\s+\d{4})',  # "November 15-20, 2025"
+                r'([A-Za-z]+\s+\d{4})',  # "November 2025"
+            ]
+            
+            date_match = None
+            for pattern in date_patterns:
+                date_match = re.search(pattern, text)
+                if date_match:
+                    print(f"      🔍 Matched pattern: {pattern[:30]}")
+                    break
             
             # If no specific date, check for season/timeframe
             season_pattern = r'(summer|fall|winter|spring|holiday)\s+(\d{4})'
-            season_match = re.search(season_pattern, text, re.IGNORECASE)
+            season_match = re.search(season_pattern, text, re.IGNORECASE) if not date_match else None
             
             if date_match:
                 start_at = date_parser.parse(date_match.group(1))
@@ -238,9 +249,11 @@ class DallasZooExtractor:
                 start_at = date_parser.parse(season_dates.get(season, f'January 1, {year}'))
                 print(f"      📅 Found seasonal date: {season} {year}")
             else:
-                # Skip if no date found
-                print(f"      ⚠️  No date found in HTML content")
-                return None
+                # If no date found, assume it's a current/ongoing event
+                # Use today's date as start
+                from datetime import datetime, timezone
+                start_at = datetime.now(timezone.utc)
+                print(f"      ℹ️  No specific date found - using today as start date")
             
             # Skip past events - keep today and future events
             from datetime import datetime, timezone
