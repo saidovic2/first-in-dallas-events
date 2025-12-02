@@ -36,9 +36,9 @@ export default function EventsPage() {
   const loadEventCounts = async () => {
     try {
       const [draftRes, publishedRes, totalRes] = await Promise.all([
-        eventsApi.list({ status: 'DRAFT' }),
-        eventsApi.list({ status: 'PUBLISHED' }),
-        eventsApi.list({})
+        eventsApi.list({ status: 'DRAFT', include_past: true }),
+        eventsApi.list({ status: 'PUBLISHED', include_past: true }),
+        eventsApi.list({ include_past: true })
       ])
       setEventCounts({
         draft: draftRes.data.length,
@@ -58,6 +58,9 @@ export default function EventsPage() {
       if (cityFilter) params.city = cityFilter
       if (categoryFilter) params.category = categoryFilter
       if (priceTierFilter) params.price_tier = priceTierFilter
+      
+      // Include past events for CMS (admin needs to see all events to manage them)
+      params.include_past = true
       
       const response = await eventsApi.list(params)
       setEvents(response.data)
