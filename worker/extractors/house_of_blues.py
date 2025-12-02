@@ -63,7 +63,18 @@ class HouseOfBluesExtractor:
         """Extract event URLs from the events listing page"""
         event_urls = set()
         
+        print(f"      🔍 Scanning page for event links...")
+        print(f"      📄 Page title: {soup.find('title').get_text() if soup.find('title') else 'No title'}")
+        
         # Look for event links
+        all_links = soup.find_all('a', href=True)
+        print(f"      🔗 Found {len(all_links)} total links on page")
+        
+        # Sample first 10 links to see what we're dealing with
+        for i, link in enumerate(all_links[:10]):
+            href = link.get('href', '')
+            print(f"         [{i+1}] {href[:80]}")
+        
         for link in soup.find_all('a', href=True):
             href = link.get('href')
             if href and '/dallas/events/' in href and '/dallas/events' != href:
@@ -72,6 +83,7 @@ class HouseOfBluesExtractor:
                 elif not href.startswith('http'):
                     continue
                 event_urls.add(href)
+                print(f"      ✅ Matched event URL: {href}")
         
         return list(event_urls)
     
