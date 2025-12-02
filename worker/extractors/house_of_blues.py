@@ -17,7 +17,7 @@ class HouseOfBluesExtractor:
     
     def __init__(self):
         self.base_url = 'https://www.houseofblues.com'
-        self.events_url = f'{self.base_url}/dallas/events'
+        self.events_url = f'{self.base_url}/dallas'
     
     def fetch_events(self) -> List[Dict]:
         """
@@ -70,14 +70,15 @@ class HouseOfBluesExtractor:
         all_links = soup.find_all('a', href=True)
         print(f"      🔗 Found {len(all_links)} total links on page")
         
-        # Sample first 10 links to see what we're dealing with
-        for i, link in enumerate(all_links[:10]):
+        # Sample first 20 links to see what we're dealing with
+        for i, link in enumerate(all_links[:20]):
             href = link.get('href', '')
             print(f"         [{i+1}] {href[:80]}")
         
         for link in soup.find_all('a', href=True):
             href = link.get('href')
-            if href and '/dallas/events/' in href and '/dallas/events' != href:
+            # Look for show/event links (e.g., /dallas/EventDetail/...)
+            if href and '/dallas/' in href and 'EventDetail' in href:
                 if href.startswith('/'):
                     href = self.base_url + href
                 elif not href.startswith('http'):
