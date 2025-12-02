@@ -79,6 +79,10 @@ def process_task(task_data):
             # Dallas Arboretum sync
             from extractors.dallas_arboretum import extract_dallas_arboretum_events
             events = extract_dallas_arboretum_events()
+        elif source_type == "klyde_warren_park_bulk" and url == "bulk:klyde_warren_park":
+            # Klyde Warren Park sync
+            from extractors.klyde_warren_park import extract_klyde_warren_park_events
+            events = extract_klyde_warren_park_events()
         # Try different extraction methods based on source type
         elif source_type == "ics":
             events = extract_ics(url)
@@ -104,6 +108,8 @@ def process_task(task_data):
                 event_source_type = "eventbrite"
             elif source_type == "dallas_arboretum_bulk":
                 event_source_type = "DALLAS_ARBORETUM"
+            elif source_type == "klyde_warren_park_bulk":
+                event_source_type = "KLYDE_WARREN_PARK"
             
             saved_count = 0
             for event_data in events:
