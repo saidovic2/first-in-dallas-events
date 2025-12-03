@@ -156,22 +156,31 @@ async def auto_publish_new_events():
 
 
 async def cleanup_old_events():
-    """Clean up events older than 30 days (optional maintenance)"""
+    """Clean up events from yesterday and earlier (Dallas/Central Time)"""
     logger.info("\n🧹 Running maintenance: Cleaning old events...")
     
     db = SessionLocal()
     
     try:
         from datetime import timedelta
-        cutoff_date = datetime.now() - timedelta(days=30)
+        import pytz
         
-        # Delete old past events
+        # Get current date in Dallas time (Central Time)
+        dallas_tz = pytz.timezone('America/Chicago')
+        dallas_now = datetime.now(dallas_tz)
+        
+        # Calculate start of today (midnight) in Dallas time
+        start_of_today = dallas_now.replace(hour=0, minute=0, second=0, microsecond=0)
+        
+        # Delete events that ended BEFORE today (keep today's events!)
         deleted = db.query(Event).filter(
-            Event.start_at < cutoff_date
+            Event.start_at < start_of_today
         ).delete()
         
         db.commit()
-        logger.info(f"✓ Cleaned up {deleted} old events")
+        logger.info(f"✓ Cleaned up {deleted} events from before today")
+        logger.info(f"  Dallas time: {dallas_now.strftime('%Y-%m-%d %I:%M %p %Z')}")
+        logger.info(f"  Kept all events from: {start_of_today.strftime('%Y-%m-%d')} onwards")
         
     except Exception as e:
         logger.error(f"✗ Cleanup error: {e}")
@@ -205,12 +214,12 @@ def start_scheduler():
         replace_existing=True
     )
     
-    # Daily cleanup: 2 AM Central Time
+    # Daily cleanup: 2 AM Central Time (removes events before today)
     scheduler.add_job(
         cleanup_old_events,
         CronTrigger(hour=2, minute=0, timezone='America/Chicago'),
         id='daily_cleanup',
-        name='Daily Event Cleanup (2 AM CT)',
+        name='Daily Event Cleanup - Keep Today (2 AM CT)',
         replace_existing=True
     )
     

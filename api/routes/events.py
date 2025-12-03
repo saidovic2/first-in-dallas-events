@@ -33,11 +33,18 @@ async def list_events(
 ):
     query = db.query(Event)
     
-    # AUTOMATICALLY exclude past events (unless include_past=true for admin)
+    # AUTOMATICALLY exclude past events (keep today's events in Dallas time)
     if not include_past:
         from datetime import datetime, timezone
-        now = datetime.now(timezone.utc)
-        query = query.filter(Event.start_at >= now)
+        import pytz
+        
+        # Get start of today in Dallas time (Central Time)
+        dallas_tz = pytz.timezone('America/Chicago')
+        dallas_now = datetime.now(dallas_tz)
+        start_of_today = dallas_now.replace(hour=0, minute=0, second=0, microsecond=0)
+        
+        # Show events from today onwards
+        query = query.filter(Event.start_at >= start_of_today)
     
     # Apply filters
     if status:

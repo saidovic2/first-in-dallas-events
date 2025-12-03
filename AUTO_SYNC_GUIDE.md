@@ -19,7 +19,7 @@ Your Events CMS now runs **fully automated** with no manual intervention needed!
 - **Evening Sync:** 6:00 PM Central Time
 
 ### Daily Maintenance
-- **Cleanup:** 2:00 AM Central Time (removes events >30 days old)
+- **Cleanup:** 2:00 AM Central Time (removes events from yesterday and earlier, **keeps today's events**)
 
 ---
 
@@ -57,9 +57,10 @@ Your Events CMS now runs **fully automated** with no manual intervention needed!
 
 ### Step 3: Daily Cleanup (2 AM)
 ```
-1. Find events >30 days old
-2. Delete from database
-3. Log cleanup count
+1. Find events from yesterday and earlier (Dallas time)
+2. Keep all of today's events
+3. Delete past events from database
+4. Log cleanup count
 ```
 
 ---
@@ -183,13 +184,22 @@ Edit `api/scheduler.py`:
 ).limit(50).all()  # Change to 100, 200, etc.
 ```
 
-### Adjust Cleanup Age
+### Keep Past Events Longer
+
+By default, events from **yesterday and earlier** are removed. To keep events longer:
 
 Edit `api/scheduler.py`:
 
 ```python
-# Delete events older than 30 days (line 162)
-cutoff_date = datetime.now() - timedelta(days=30)  # Change to 60, 90, etc.
+# Current: removes events before today
+start_of_today = dallas_now.replace(hour=0, minute=0, second=0, microsecond=0)
+
+# To keep last 7 days:
+cutoff_date = dallas_now - timedelta(days=7)
+cutoff_date = cutoff_date.replace(hour=0, minute=0, second=0, microsecond=0)
+
+# Then change the filter:
+query = query.filter(Event.start_at < cutoff_date)
 ```
 
 ---
