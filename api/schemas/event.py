@@ -52,8 +52,8 @@ class EventResponse(BaseModel):
     fid_hash: str
     status: str
     wp_post_id: Optional[int]
-    created_at: datetime
-    updated_at: Optional[datetime]
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
     
     class Config:
         from_attributes = True
