@@ -15,7 +15,7 @@ from dotenv import load_dotenv
 
 # Configuration
 APIFY_API_TOKEN = "apify_api_SyxGrvd54Tx0gfbRlbqfIK823e4Bf11UutCW"
-DATASET_ID = "MFCwnLRBHTdcsJKpS"  # UPDATE THIS with your new dataset ID
+DATASET_ID = "tTjM7nfqGag5B4nE9"  # 1000 events from run w5cFnw5KJFzrzQYef
 TICKETMASTER_AFFILIATE_ID = "6497023"
 
 # Database URL - Railway public connection
@@ -55,17 +55,53 @@ class Event(Base):
 
 
 def add_affiliate_tracking(url, affiliate_id):
-    """Add Ticketmaster affiliate tracking"""
+    """
+    Add Ticketmaster affiliate tracking to URL for commission earnings
+    Format: ?CAMEFROM=CMPAFFILIATE_{affiliate_id} or &CAMEFROM=...
+    """
     if not url or not affiliate_id:
         return url
     
+    # Check if URL already has query parameters
     separator = '&' if '?' in url else '?'
+    
+    # Add affiliate tracking parameter
     affiliate_param = f"CAMEFROM=CMPAFFILIATE_{affiliate_id}"
     
+    # Only add if not already present
     if 'CAMEFROM' not in url:
         url = f"{url}{separator}{affiliate_param}"
     
     return url
+
+
+def get_high_res_image(image_url):
+    """
+    Convert Ticketmaster thumbnail to high-resolution image
+    Ticketmaster images have size parameters we can upgrade
+    """
+    if not image_url or 'ticketm.net' not in image_url:
+        return image_url
+    
+    # List of low-res patterns to replace with high-res
+    low_res_patterns = [
+        'TABLET_LANDSCAPE_16_9',      # 1024x576
+        'TABLET_PORTRAIT_16_9',       # 768x432
+        'TABLET_LANDSCAPE_3_2',       # 1024x683
+        'RETINA_PORTRAIT_16_9',       # 640x360
+        'RETINA_LANDSCAPE_16_9',      # 1136x639
+        'CUSTOM',                     # Variable
+    ]
+    
+    # Replace with highest quality version
+    high_res_pattern = 'RETINA_LANDSCAPE_LARGE_16_9'  # 2048x1152 - Best quality
+    
+    for pattern in low_res_patterns:
+        if pattern in image_url:
+            image_url = image_url.replace(pattern, high_res_pattern)
+            break
+    
+    return image_url
 
 
 def fetch_apify_dataset(dataset_id, api_token):
@@ -138,8 +174,9 @@ def transform_apify_event(apify_event):
     state = apify_event.get('addressRegion', 'TX')
     address = f"{street}, {city}, {state}".strip(', ')
     
-    # Image
+    # Image - upgrade to high resolution
     image_url = apify_event.get('image', '')
+    image_url = get_high_res_image(image_url)  # Convert to 2048x1152 quality!
     
     # Price tier (MUST BE UPPERCASE for database enum)
     price = apify_event.get('offer.price')
