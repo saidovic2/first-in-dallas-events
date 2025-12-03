@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routes import auth, events, tasks, stats, sync, ticketmaster, featured
+from routes import auth, events, tasks, stats, sync, ticketmaster, featured, scheduler_control
 from database import engine, Base
 
 app = FastAPI(
@@ -14,6 +14,14 @@ app = FastAPI(
 async def startup_event():
     Base.metadata.create_all(bind=engine)
     print("✅ Database tables created/verified")
+    
+    # Start automated scheduler
+    try:
+        from scheduler import start_scheduler
+        start_scheduler()
+        print("✅ Automated scheduler started (2x daily syncs)")
+    except Exception as e:
+        print(f"⚠️  Scheduler not started: {e}")
 
 # CORS middleware
 app.add_middleware(
@@ -40,6 +48,7 @@ app.include_router(tasks.router, prefix="/api/tasks", tags=["Tasks"])
 app.include_router(stats.router, prefix="/api/stats", tags=["Statistics"])
 app.include_router(sync.router, prefix="/api/sync", tags=["Bulk Sync"])
 app.include_router(ticketmaster.router, prefix="/api/ticketmaster", tags=["Ticketmaster"])
+app.include_router(scheduler_control.router, prefix="/api/scheduler", tags=["Scheduler"])
 
 @app.get("/")
 async def root():
@@ -52,3 +61,12 @@ async def root():
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    try:
+        from scheduler import stop_scheduler
+        stop_scheduler()
+        print("✅ Scheduler stopped")
+    except:
+        pass
