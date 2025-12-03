@@ -1,0 +1,213 @@
+          {/* Perot Museum Sync Card */}
+          <div className="bg-white border-2 border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center mb-4">
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
+                <span className="text-2xl">🔬</span>
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold">Perot Museum</h2>
+                <p className="text-sm text-gray-500">Science & Education</p>
+              </div>
+            </div>
+            
+            <div className="mb-4 text-sm text-gray-600">
+              <p className="mb-2">🧪 <strong>Categories:</strong></p>
+              <ul className="list-disc list-inside ml-2 space-y-1">
+                <li>Education & Science</li>
+                <li>Family & Kids</li>
+                <li>Workshops</li>
+              </ul>
+              <p className="mt-3">📊 <strong>Expected:</strong> 20-30 events</p>
+              <p className="mt-1">⏱️ <strong>Duration:</strong> 30-60 seconds</p>
+            </div>
+
+            {status && status.perot_museum && status.perot_museum.length > 0 && (
+              <div className="mb-4 p-3 bg-gray-50 rounded text-sm">
+                <p className="text-gray-600">
+                  <strong>Last sync:</strong> {getLastSync(status.perot_museum)}
+                </p>
+                <p className={`mt-1 ${getStatusColor(status.perot_museum[0].status)}`}>
+                  <strong>Status:</strong> {status.perot_museum[0].status}
+                </p>
+              </div>
+            )}
+
+            <button
+              onClick={syncPerotMuseum}
+              disabled={loading.perotMuseum}
+              className="w-full py-3 px-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+            >
+              {loading.perotMuseum ? (
+                <span className="flex items-center justify-center">
+                  <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                  </svg>
+                  Syncing...
+                </span>
+              ) : (
+                '🔬 Sync Perot Museum'
+              )}
+            </button>
+          </div>
+
+          {/* Dallas Public Library Sync Card */}
+          <div className="bg-white border-2 border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center mb-4">
+              <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mr-4">
+                <span className="text-2xl">📚</span>
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold">Dallas Public Library</h2>
+                <p className="text-sm text-gray-500">FREE Events</p>
+              </div>
+            </div>
+            
+            <div className="mb-4 text-sm text-gray-600">
+              <p className="mb-2">📖 <strong>Categories:</strong></p>
+              <ul className="list-disc list-inside ml-2 space-y-1">
+                <li>Reading & Literacy</li>
+                <li>Arts & Crafts</li>
+                <li>STEM & Technology</li>
+                <li>Education</li>
+              </ul>
+              <p className="mt-3">📊 <strong>Expected:</strong> 50+ events</p>
+              <p className="mt-1">⏱️ <strong>Duration:</strong> 1-2 minutes</p>
+            </div>
+
+            {status && status.dallas_library && status.dallas_library.length > 0 && (
+              <div className="mb-4 p-3 bg-gray-50 rounded text-sm">
+                <p className="text-gray-600">
+                  <strong>Last sync:</strong> {getLastSync(status.dallas_library)}
+                </p>
+                <p className={`mt-1 ${getStatusColor(status.dallas_library[0].status)}`}>
+                  <strong>Status:</strong> {status.dallas_library[0].status}
+                </p>
+              </div>
+            )}
+
+            <button
+              onClick={syncDallasLibrary}
+              disabled={loading.dallasLibrary}
+              className="w-full py-3 px-4 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+            >
+              {loading.dallasLibrary ? (
+                <span className="flex items-center justify-center">
+                  <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                  </svg>
+                  Syncing...
+                </span>
+              ) : (
+                '📚 Sync Dallas Library'
+              )}
+            </button>
+          </div>
+
+          {/* Dallas Zoo Sync Card */}
+          <div className="bg-white border-2 border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center mb-4">
+              <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mr-4">
+                <span className="text-2xl">🦁</span>
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold">Dallas Zoo</h2>
+                <p className="text-sm text-gray-500">Animals & Nature</p>
+              </div>
+            </div>
+            
+            <div className="mb-4 text-sm text-gray-600">
+              <p className="mb-2">🐘 <strong>Categories:</strong></p>
+              <ul className="list-disc list-inside ml-2 space-y-1">
+                <li>Animals & Nature</li>
+                <li>Family & Kids</li>
+                <li>Education</li>
+              </ul>
+              <p className="mt-3">📊 <strong>Expected:</strong> 10-20 events</p>
+              <p className="mt-1">⏱️ <strong>Duration:</strong> 20-40 seconds</p>
+            </div>
+
+            {status && status.dallas_zoo && status.dallas_zoo.length > 0 && (
+              <div className="mb-4 p-3 bg-gray-50 rounded text-sm">
+                <p className="text-gray-600">
+                  <strong>Last sync:</strong> {getLastSync(status.dallas_zoo)}
+                </p>
+                <p className={`mt-1 ${getStatusColor(status.dallas_zoo[0].status)}`}>
+                  <strong>Status:</strong> {status.dallas_zoo[0].status}
+                </p>
+              </div>
+            )}
+
+            <button
+              onClick={syncDallasZoo}
+              disabled={loading.dallasZoo}
+              className="w-full py-3 px-4 bg-orange-600 text-white font-semibold rounded-lg hover:bg-orange-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+            >
+              {loading.dallasZoo ? (
+                <span className="flex items-center justify-center">
+                  <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                  </svg>
+                  Syncing...
+                </span>
+              ) : (
+                '🦁 Sync Dallas Zoo'
+              )}
+            </button>
+          </div>
+
+          {/* Fair Park Sync Card */}
+          <div className="bg-white border-2 border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center mb-4">
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mr-4">
+                <span className="text-2xl">🎡</span>
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold">Fair Park</h2>
+                <p className="text-sm text-gray-500">Festivals & Cultural</p>
+              </div>
+            </div>
+            
+            <div className="mb-4 text-sm text-gray-600">
+              <p className="mb-2">🎪 <strong>Categories:</strong></p>
+              <ul className="list-disc list-inside ml-2 space-y-1">
+                <li>Festivals & Fairs</li>
+                <li>Cultural Events</li>
+                <li>Music & Concerts</li>
+                <li>Sports</li>
+              </ul>
+              <p className="mt-3">📊 <strong>Expected:</strong> 30-40 events</p>
+              <p className="mt-1">⏱️ <strong>Duration:</strong> 30-60 seconds</p>
+            </div>
+
+            {status && status.fair_park && status.fair_park.length > 0 && (
+              <div className="mb-4 p-3 bg-gray-50 rounded text-sm">
+                <p className="text-gray-600">
+                  <strong>Last sync:</strong> {getLastSync(status.fair_park)}
+                </p>
+                <p className={`mt-1 ${getStatusColor(status.fair_park[0].status)}`}>
+                  <strong>Status:</strong> {status.fair_park[0].status}
+                </p>
+              </div>
+            )}
+
+            <button
+              onClick={syncFairPark}
+              disabled={loading.fairPark}
+              className="w-full py-3 px-4 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+            >
+              {loading.fairPark ? (
+                <span className="flex items-center justify-center">
+                  <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                  </svg>
+                  Syncing...
+                </span>
+              ) : (
+                '🎡 Sync Fair Park'
+              )}
+            </button>
+          </div>

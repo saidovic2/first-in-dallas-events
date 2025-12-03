@@ -1,0 +1,132 @@
+===============================================================
+  RAILWAY FIX - Services Deployed But Not Working
+===============================================================
+
+Your services show green checkmarks but aren't accessible.
+This is usually because:
+1. No public domain generated
+2. Missing environment variables
+3. Services crashed after starting
+
+===============================================================
+DO THIS NOW IN RAILWAY (5 minutes):
+===============================================================
+
+STEP 1: Check first-in-dallas-events Service
+-------------------------------------------------------------
+1. Railway Dashboard → Click "first-in-dallas-events"
+2. Click "Deployments" tab
+3. Click the latest deployment (should show green checkmark)
+4. Look at the LOGS - do you see errors?
+
+Common errors:
+• "DATABASE_URL is not set" → Need to add variables
+• "Connection refused" → Database not connected
+• "Port binding failed" → Already fixed in code
+
+STEP 2: Generate Public Domain
+-------------------------------------------------------------
+1. Still in first-in-dallas-events service
+2. Click "Settings" tab
+3. Scroll to "Networking" section
+4. Look for "Public Networking" or "Domains"
+5. Click "Generate Domain" button
+6. Copy the domain URL that appears
+
+STEP 3: Add Environment Variables (CRITICAL!)
+-------------------------------------------------------------
+1. Still in first-in-dallas-events service
+2. Click "Variables" tab
+3. Check if you have these variables:
+
+   Required variables (add if missing):
+   ------------------------------------
+   DATABASE_URL = <click PostgreSQL service, copy URL>
+   REDIS_URL = <click Redis service, copy URL>
+   JWT_SECRET = my-secret-key-12345
+   EVENTBRITE_API_TOKEN = MOZFNTBR4O22QQV33X2C
+   TICKETMASTER_API_KEY = Tx3dcKearAsHFOrhBsO6JVK2HbT0AEoK
+   TICKETMASTER_AFFILIATE_ID = 6497023
+   SUPABASE_URL = https://jwlvikkbcjrnzsvhyfgy.supabase.co
+   SUPABASE_SERVICE_ROLE_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp3bHZpa2tiY2pybnpzdmh5Zmd5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MTQ2Mzc3MiwiZXhwIjoyMDc3MDM5NzcyfQ.hw6S9WncejbjqQG13hR3AYtFbldw3H5miuLQHpy6NIY
+
+4. To get DATABASE_URL and REDIS_URL:
+   • Click on "Postgres" service in your Railway project
+   • Click "Connect" or "Variables" tab
+   • Copy the connection string
+   • Do same for Redis service
+
+5. After adding variables, service will auto-redeploy
+
+STEP 4: Repeat for Worker Service
+-------------------------------------------------------------
+1. Click "wonderful-vibrancy" service
+2. Click "Variables" tab
+3. Add the SAME variables as above
+
+(Worker doesn't need public domain, but needs same env vars)
+
+STEP 5: Wait for Services to Restart (1-2 minutes)
+-------------------------------------------------------------
+After adding variables, both services will redeploy.
+Watch for green checkmarks again.
+
+STEP 6: Test API
+-------------------------------------------------------------
+Once you have the domain from Step 2, test it:
+
+1. Open this URL in browser:
+   https://YOUR-DOMAIN.up.railway.app/health
+
+2. Should show: {"status":"healthy"}
+
+3. Then test events:
+   https://YOUR-DOMAIN.up.railway.app/api/events
+
+===============================================================
+WHY YOUR SYNC BUTTON ISN'T WORKING:
+===============================================================
+
+Your CMS (web dashboard) is trying to connect to Railway API,
+but the API either:
+1. Doesn't have a public domain
+2. Has wrong environment variables
+3. Can't connect to database
+
+After fixing above steps, the sync button will work!
+
+===============================================================
+AFTER API IS WORKING:
+===============================================================
+
+1. Update WordPress:
+   WordPress Admin → Settings → Events CMS
+   API URL: https://YOUR-DOMAIN.up.railway.app/api
+   Save Changes
+
+2. Fix Database (events are probably DRAFT):
+   Railway → PostgreSQL service → Query tab
+   Run: UPDATE events SET status = 'PUBLISHED' WHERE status = 'DRAFT';
+
+3. Test sync in CMS Dashboard
+
+===============================================================
+QUICK CHECKLIST:
+===============================================================
+
+[ ] first-in-dallas-events has public domain generated
+[ ] first-in-dallas-events has all 8 environment variables
+[ ] wonderful-vibrancy has all 8 environment variables
+[ ] Both services show green checkmarks
+[ ] API /health endpoint returns {"status":"healthy"}
+[ ] WordPress has correct API URL
+[ ] Database events updated to PUBLISHED
+
+===============================================================
+
+MOST LIKELY ISSUE: Missing DATABASE_URL and REDIS_URL
+
+Railway services need these to connect to your database.
+Without them, the API can't start properly.
+
+===============================================================

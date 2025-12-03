@@ -1,0 +1,167 @@
+  const syncPerotMuseum = async () => {
+    setLoading(prev => ({ ...prev, perotMuseum: true }))
+    setMessage(null)
+    setActiveTask(null)
+    
+    try {
+      const token = localStorage.getItem('token')
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001'
+      const response = await fetch(`${apiUrl}/api/sync/perot-museum`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        setMessage({
+          type: 'info',
+          text: `🔄 Perot Museum sync started! Fetching science events...`
+        })
+        
+        if (data.task_id) {
+          const interval = setInterval(() => pollTaskStatus(data.task_id), 3000)
+          setPollingInterval(interval)
+        }
+        
+        setTimeout(fetchSyncStatus, 2000)
+      } else {
+        throw new Error('Failed to start sync')
+      }
+    } catch (error: any) {
+      const errorMsg = error?.message || 'Unknown error'
+      setMessage({
+        type: 'error',
+        text: `❌ Error starting Perot Museum sync: ${errorMsg}.`
+      })
+      setLoading(prev => ({ ...prev, perotMuseum: false }))
+    }
+  }
+
+  const syncDallasLibrary = async () => {
+    setLoading(prev => ({ ...prev, dallasLibrary: true }))
+    setMessage(null)
+    setActiveTask(null)
+    
+    try {
+      const token = localStorage.getItem('token')
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001'
+      const response = await fetch(`${apiUrl}/api/sync/dallas-library`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        setMessage({
+          type: 'info',
+          text: `🔄 Dallas Public Library sync started! Fetching FREE events...`
+        })
+        
+        if (data.task_id) {
+          const interval = setInterval(() => pollTaskStatus(data.task_id), 3000)
+          setPollingInterval(interval)
+        }
+        
+        setTimeout(fetchSyncStatus, 2000)
+      } else {
+        throw new Error('Failed to start sync')
+      }
+    } catch (error: any) {
+      const errorMsg = error?.message || 'Unknown error'
+      setMessage({
+        type: 'error',
+        text: `❌ Error starting Dallas Library sync: ${errorMsg}.`
+      })
+      setLoading(prev => ({ ...prev, dallasLibrary: false }))
+    }
+  }
+
+  const syncDallasZoo = async () => {
+    setLoading(prev => ({ ...prev, dallasZoo: true }))
+    setMessage(null)
+    setActiveTask(null)
+    
+    try {
+      const token = localStorage.getItem('token')
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001'
+      const response = await fetch(`${apiUrl}/api/sync/dallas-zoo`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        setMessage({
+          type: 'info',
+          text: `🔄 Dallas Zoo sync started! Fetching animal events...`
+        })
+        
+        if (data.task_id) {
+          const interval = setInterval(() => pollTaskStatus(data.task_id), 3000)
+          setPollingInterval(interval)
+        }
+        
+        setTimeout(fetchSyncStatus, 2000)
+      } else {
+        throw new Error('Failed to start sync')
+      }
+    } catch (error: any) {
+      const errorMsg = error?.message || 'Unknown error'
+      setMessage({
+        type: 'error',
+        text: `❌ Error starting Dallas Zoo sync: ${errorMsg}.`
+      })
+      setLoading(prev => ({ ...prev, dallasZoo: false }))
+    }
+  }
+
+  const syncFairPark = async () => {
+    setLoading(prev => ({ ...prev, fairPark: true }))
+    setMessage(null)
+    setActiveTask(null)
+    
+    try {
+      const token = localStorage.getItem('token')
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001'
+      const response = await fetch(`${apiUrl}/api/sync/fair-park`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        setMessage({
+          type: 'info',
+          text: `🔄 Fair Park sync started! Fetching festival events...`
+        })
+        
+        if (data.task_id) {
+          const interval = setInterval(() => pollTaskStatus(data.task_id), 3000)
+          setPollingInterval(interval)
+        }
+        
+        setTimeout(fetchSyncStatus, 2000)
+      } else {
+        throw new Error('Failed to start sync')
+      }
+    } catch (error: any) {
+      const errorMsg = error?.message || 'Unknown error'
+      setMessage({
+        type: 'error',
+        text: `❌ Error starting Fair Park sync: ${errorMsg}.`
+      })
+      setLoading(prev => ({ ...prev, fairPark: false }))
+    }
+  }

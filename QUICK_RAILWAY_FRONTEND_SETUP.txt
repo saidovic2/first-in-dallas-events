@@ -1,0 +1,97 @@
+================================================================
+  VERCEL FAILING - Deploy Frontend to Railway Instead (FREE)
+================================================================
+
+PROBLEM: Vercel free plan limit exceeded (12 serverless functions)
+SOLUTION: Deploy frontend to Railway (more generous free tier)
+
+================================================================
+STEP 1: Create Frontend Service (2 minutes)
+================================================================
+
+1. Railway Dashboard → Your project
+2. Click "+ New Service"
+3. Select "GitHub Repo"
+4. Select your repository: saidovic2/first-in-dallas-events
+5. Railway creates new service
+
+================================================================
+STEP 2: Configure Service (2 minutes)
+================================================================
+
+1. Click the new service
+2. Settings tab → Build section
+3. Set these:
+
+   Root Directory: web
+   Build Command: npm run build
+   Start Command: npm run start
+   Install Command: npm install
+
+================================================================
+STEP 3: Add Environment Variables (2 minutes)
+================================================================
+
+Variables tab → Add these 4 variables:
+
+NEXT_PUBLIC_API_URL = <Get from first-in-dallas-events service>
+NEXT_PUBLIC_SUPABASE_URL = https://jwlvikkbcjrnzsvhyfgy.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp3bHZpa2tiY2pybnpzdmh5Zmd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE0NjM3NzIsImV4cCI6MjA3NzAzOTc3Mn0.mRluKwZ2B0qg0Z8YGYCx4QRFMP5WwxiTef_olGDEJS4
+NODE_ENV = production
+
+To get NEXT_PUBLIC_API_URL:
+  → Click first-in-dallas-events service
+  → Settings → Networking
+  → Generate Domain (if not exists)
+  → Copy domain (e.g., https://web-production-abc.up.railway.app)
+
+================================================================
+STEP 4: Generate Domain (1 minute)
+================================================================
+
+1. Still in new frontend service
+2. Settings → Networking
+3. Generate Domain
+4. Copy domain (this is your CMS URL)
+
+================================================================
+STEP 5: Deploy & Test (3 minutes)
+================================================================
+
+1. Deployments tab → Should auto-deploy
+2. Wait for green checkmark
+3. Go to your CMS domain from Step 4
+4. Should see login page!
+5. Login and test sync
+
+================================================================
+WHY VERCEL FAILED:
+================================================================
+
+Vercel free plan: 12 serverless functions max
+Your CMS: 15+ pages/routes
+Result: Build fails
+
+Railway: More generous limits, better for this app
+
+================================================================
+BENEFITS OF RAILWAY:
+================================================================
+
+✓ Everything in one platform (API, Worker, Frontend, Database)
+✓ Free tier sufficient for your app
+✓ No serverless function limits
+✓ Simpler environment variable management
+✓ Easier debugging (all logs in one place)
+
+================================================================
+COST:
+================================================================
+
+Railway: $5 free credit/month
+Your usage: Likely within free tier
+Vercel Pro: $20/month (not worth it)
+
+================================================================
+
+START NOW: Railway Dashboard → + New Service → GitHub Repo

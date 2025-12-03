@@ -13,7 +13,7 @@ Before starting, ensure you have:
 #### Step 1: Open PowerShell
 Right-click in this folder and select "Open in Terminal" or "Open PowerShell window here"
 
-#### Step 2: Run Setup
+#### START HERE - Railway Services Not Working (5 Minutes to Fix)
 ```powershell
 .\setup.ps1
 ```

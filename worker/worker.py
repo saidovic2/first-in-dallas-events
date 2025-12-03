@@ -71,10 +71,6 @@ def process_task(task_data):
             # Bulk Eventbrite sync
             from extractors.bulk_eventbrite import bulk_sync_eventbrite_dallas
             events = bulk_sync_eventbrite_dallas()
-        elif source_type == "ticketmaster_bulk" and url == "bulk:ticketmaster:dallas":
-            # Bulk Ticketmaster sync
-            from extractors.ticketmaster import extract_ticketmaster_events
-            events = extract_ticketmaster_events(city="Dallas", state="TX")
         elif source_type == "dallas_arboretum_bulk" and url == "bulk:dallas_arboretum":
             # Dallas Arboretum sync
             from extractors.dallas_arboretum import extract_dallas_arboretum_events
