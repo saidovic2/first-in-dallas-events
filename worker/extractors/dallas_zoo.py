@@ -213,47 +213,59 @@ class DallasZooExtractor:
             # Try to extract date info from page
             text = soup.get_text()
             
-            # Look for date patterns (multiple formats)
+            # Look for date patterns (multiple formats) - be specific to avoid false matches
+            months = r'(January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)'
             date_patterns = [
-                r'([A-Za-z]+\s+\d{1,2},\s+\d{4})',  # "November 15, 2025"
-                r'(\d{1,2}/\d{1,2}/\d{4})',  # "11/15/2025"
-                r'([A-Za-z]+\s+\d{1,2}-\d{1,2},\s+\d{4})',  # "November 15-20, 2025"
-                r'([A-Za-z]+\s+\d{4})',  # "November 2025"
+                (rf'{months}\s+\d{{1,2}},\s+\d{{4}}', 'Month Day, Year'),  # "November 15, 2025"
+                (r'\d{1,2}/\d{1,2}/\d{4}', 'MM/DD/YYYY'),  # "11/15/2025"
+                (rf'{months}\s+\d{{1,2}}-\d{{1,2}},\s+\d{{4}}', 'Month Day-Day, Year'),  # "November 15-20, 2025"
+                (rf'{months}\s+\d{{4}}', 'Month Year'),  # "November 2025"
             ]
             
             date_match = None
-            for pattern in date_patterns:
-                date_match = re.search(pattern, text)
-                if date_match:
-                    print(f"      🔍 Matched pattern: {pattern[:30]}")
+            matched_text = None
+            for pattern, description in date_patterns:
+                match = re.search(pattern, text, re.IGNORECASE)
+                if match:
+                    date_match = match
+                    matched_text = match.group(0)
+                    print(f"      🔍 Matched {description}: '{matched_text}'")
                     break
             
-            # If no specific date, check for season/timeframe
-            season_pattern = r'(summer|fall|winter|spring|holiday)\s+(\d{4})'
-            season_match = re.search(season_pattern, text, re.IGNORECASE) if not date_match else None
+            # Try to parse the date
+            start_at = None
             
             if date_match:
-                start_at = date_parser.parse(date_match.group(1))
-                print(f"      📅 Found date: {date_match.group(1)}")
-            elif season_match:
-                # Use current year and season start
-                season = season_match.group(1).lower()
-                year = int(season_match.group(2))
-                season_dates = {
-                    'spring': f'March 1, {year}',
-                    'summer': f'June 1, {year}',
-                    'fall': f'September 1, {year}',
-                    'winter': f'December 1, {year}',
-                    'holiday': f'December 1, {year}'
-                }
-                start_at = date_parser.parse(season_dates.get(season, f'January 1, {year}'))
-                print(f"      📅 Found seasonal date: {season} {year}")
-            else:
-                # If no date found, assume it's a current/ongoing event
-                # Use today's date as start
-                from datetime import datetime, timezone
-                start_at = datetime.now(timezone.utc)
-                print(f"      ℹ️  No specific date found - using today as start date")
+                try:
+                    start_at = date_parser.parse(matched_text)
+                    print(f"      📅 Parsed date: {matched_text} → {start_at.date()}")
+                except Exception as e:
+                    print(f"      ⚠️  Failed to parse '{matched_text}': {str(e)[:50]}")
+            
+            # If date parsing failed, try seasonal pattern
+            if not start_at:
+                season_pattern = r'(summer|fall|winter|spring|holiday)\s+(\d{4})'
+                season_match = re.search(season_pattern, text, re.IGNORECASE)
+                
+                if season_match:
+                    # Use current year and season start
+                    season = season_match.group(1).lower()
+                    year = int(season_match.group(2))
+                    season_dates = {
+                        'spring': f'March 1, {year}',
+                        'summer': f'June 1, {year}',
+                        'fall': f'September 1, {year}',
+                        'winter': f'December 1, {year}',
+                        'holiday': f'December 1, {year}'
+                    }
+                    start_at = date_parser.parse(season_dates.get(season, f'January 1, {year}'))
+                    print(f"      📅 Found seasonal date: {season} {year}")
+                else:
+                    # If no date found, assume it's a current/ongoing event
+                    # Use today's date as start
+                    from datetime import datetime, timezone
+                    start_at = datetime.now(timezone.utc)
+                    print(f"      ℹ️  No specific date found - using today as start date")
             
             # Skip past events - keep today and future events
             from datetime import datetime, timezone
