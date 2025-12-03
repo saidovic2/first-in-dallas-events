@@ -22,6 +22,7 @@ class SourceType(str, enum.Enum):
     DALLAS_LIBRARY = "DALLAS_LIBRARY"
     DALLAS_ZOO = "DALLAS_ZOO"
     FAIR_PARK = "FAIR_PARK"
+    TICKETMASTER = "TICKETMASTER"
 
 class PriceTier(str, enum.Enum):
     FREE = "free"
