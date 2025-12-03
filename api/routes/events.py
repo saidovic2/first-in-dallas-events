@@ -27,7 +27,7 @@ async def list_events(
     end_date: Optional[str] = None,
     search: Optional[str] = None,
     include_past: bool = False,  # New parameter to include past events
-    limit: int = Query(500, le=1000),
+    limit: int = Query(2000, le=5000),  # Increased for large event lists
     offset: int = 0,
     db: Session = Depends(get_db)
 ):
