@@ -78,28 +78,49 @@ def add_affiliate_tracking(url, affiliate_id):
 def get_high_res_image(image_url):
     """
     Convert Ticketmaster thumbnail to high-resolution image
-    Ticketmaster images have size parameters we can upgrade
+    Replace ANY size suffix with the highest quality version
     """
     if not image_url or 'ticketm.net' not in image_url:
         return image_url
     
-    # List of low-res patterns to replace with high-res
-    low_res_patterns = [
+    # ALL Ticketmaster image size patterns (low, medium, and high res)
+    all_patterns = [
+        # Low-res patterns
+        'RECOMENDATION_16_9',         # Tiny recommendation thumbnail
+        'RECOMENDATION_3_2',          # Tiny recommendation
         'TABLET_LANDSCAPE_16_9',      # 1024x576
         'TABLET_PORTRAIT_16_9',       # 768x432
         'TABLET_LANDSCAPE_3_2',       # 1024x683
-        'RETINA_PORTRAIT_16_9',       # 640x360
+        'TABLET_PORTRAIT_3_2',        # 683x1024
+        'RETINA_PORTRAIT_16_9',       # 640x360 (portrait, very small!)
         'RETINA_LANDSCAPE_16_9',      # 1136x639
-        'CUSTOM',                     # Variable
+        'RETINA_PORTRAIT_3_2',        # 640x427
+        'RETINA_LANDSCAPE_3_2',       # 1024x683
+        'CUSTOM',                     # Variable small
+        'EVENT_DETAIL_PAGE_16_9',     # Medium
+        'ARTIST_PAGE_3_2',            # Medium
     ]
     
-    # Replace with highest quality version
-    high_res_pattern = 'RETINA_LANDSCAPE_LARGE_16_9'  # 2048x1152 - Best quality
+    # Replace with HIGHEST quality version available
+    high_res_pattern = 'RETINA_LANDSCAPE_LARGE_16_9'  # 2048x1152 - Crystal clear!
     
-    for pattern in low_res_patterns:
+    # Try to replace any pattern found
+    for pattern in all_patterns:
         if pattern in image_url:
             image_url = image_url.replace(pattern, high_res_pattern)
-            break
+            return image_url
+    
+    # If no pattern found, try adding the high-res suffix before file extension
+    if '.jpg' in image_url and '_' in image_url:
+        # If URL ends with just .jpg, add the high-res pattern
+        base_url = image_url.rsplit('/', 1)[0]
+        filename = image_url.rsplit('/', 1)[1]
+        
+        # Extract the ID part before .jpg
+        if '_' not in filename:
+            # No pattern at all, add high-res before .jpg
+            filename = filename.replace('.jpg', f'_{high_res_pattern}.jpg')
+            image_url = f"{base_url}/{filename}"
     
     return image_url
 
