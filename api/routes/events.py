@@ -128,6 +128,24 @@ async def create_event(
     db.commit()
     db.refresh(new_event)
     
+    # Auto-publish to WordPress if status is PUBLISHED
+    if status == "PUBLISHED":
+        try:
+            from utils.wordpress import publish_to_wordpress
+            print(f"📝 Auto-publishing to WordPress: {title}")
+            wp_post_id = await publish_to_wordpress(new_event, auto_enhance=True)
+            
+            # Save WordPress post ID back to event
+            new_event.wp_post_id = wp_post_id
+            db.commit()
+            db.refresh(new_event)
+            
+            print(f"✅ WordPress post created (ID: {wp_post_id})")
+        except Exception as e:
+            # Don't fail the entire request if WordPress publish fails
+            print(f"⚠️ WordPress auto-publish failed: {e}")
+            # Event still created successfully, just without WordPress post
+    
     return EventResponse.model_validate(new_event)
 
 @router.get("/{event_id}", response_model=EventResponse)
