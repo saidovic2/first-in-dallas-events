@@ -12,7 +12,7 @@ import { CheckCircle, XCircle, Clock, ExternalLink, Eye, Loader2 } from 'lucide-
 import Image from 'next/image'
 
 export default function SubmissionsPage() {
-  const [submissions, setSubmissions] = useState<any[]>([])
+  const [allSubmissions, setAllSubmissions] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'pending' | 'published' | 'rejected'>('pending')
   const searchParams = useSearchParams()
@@ -20,7 +20,7 @@ export default function SubmissionsPage() {
 
   useEffect(() => {
     loadSubmissions()
-  }, [filter, organizerEmail])
+  }, [organizerEmail])
 
   const loadSubmissions = async () => {
     try {
@@ -28,10 +28,6 @@ export default function SubmissionsPage() {
         .from('event_submissions')
         .select('*')
         .order('created_at', { ascending: false })
-
-      if (filter !== 'all') {
-        query = query.eq('status', filter)
-      }
 
       // Filter by organizer email if provided
       if (organizerEmail) {
@@ -46,21 +42,20 @@ export default function SubmissionsPage() {
       }
       
       console.log('Loaded submissions:', data)
-      console.log('Current filter:', filter)
       console.log('Submissions count:', data?.length || 0)
       
-      // Log the actual status values we're seeing
-      if (data && data.length > 0) {
-        console.log('Status values in data:', data.map(s => s.status))
-      }
-      
-      setSubmissions(data || [])
+      setAllSubmissions(data || [])
     } catch (error) {
       console.error('Failed to load submissions:', error)
     } finally {
       setLoading(false)
     }
   }
+
+  // Filter submissions based on selected filter
+  const submissions = filter === 'all' 
+    ? allSubmissions 
+    : allSubmissions.filter(s => s.status === filter)
 
   const handleApprove = async (id: string) => {
     if (!confirm('Approve and publish this event to the live directory?')) return
@@ -151,7 +146,7 @@ export default function SubmissionsPage() {
     )
   }
 
-  const pendingCount = submissions.filter(s => s.status === 'pending').length
+  const pendingCount = allSubmissions.filter(s => s.status === 'pending').length
 
   return (
     <div className="p-8">
@@ -179,7 +174,7 @@ export default function SubmissionsPage() {
           className={filter === 'pending' ? 'bg-yellow-500 text-white hover:bg-yellow-600 border-yellow-600' : 'hover:bg-yellow-50 border-yellow-300 text-yellow-700'}
         >
           <Clock className="h-4 w-4 mr-2" />
-          Pending ({submissions.filter(s => s.status === 'pending').length})
+          Pending ({allSubmissions.filter(s => s.status === 'pending').length})
         </Button>
         <Button
           variant="outline"
@@ -187,7 +182,7 @@ export default function SubmissionsPage() {
           className={filter === 'published' ? 'bg-green-500 text-white hover:bg-green-600 border-green-600' : 'hover:bg-green-50 border-green-300 text-green-700'}
         >
           <CheckCircle className="h-4 w-4 mr-2" />
-          Published ({submissions.filter(s => s.status === 'published').length})
+          Published ({allSubmissions.filter(s => s.status === 'published').length})
         </Button>
         <Button
           variant="outline"
@@ -195,14 +190,14 @@ export default function SubmissionsPage() {
           className={filter === 'rejected' ? 'bg-red-500 text-white hover:bg-red-600 border-red-600' : 'hover:bg-red-50 border-red-300 text-red-700'}
         >
           <XCircle className="h-4 w-4 mr-2" />
-          Rejected ({submissions.filter(s => s.status === 'rejected').length})
+          Rejected ({allSubmissions.filter(s => s.status === 'rejected').length})
         </Button>
         <Button
           variant="outline"
           onClick={() => setFilter('all')}
           className={filter === 'all' ? 'bg-blue-500 text-white hover:bg-blue-600 border-blue-600' : 'hover:bg-blue-50 border-blue-300 text-blue-700'}
         >
-          All ({submissions.length})
+          All ({allSubmissions.length})
         </Button>
       </div>
 
