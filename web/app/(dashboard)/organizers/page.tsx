@@ -74,9 +74,9 @@ export default function OrganizersPage() {
         const organizer = organizerMap.get(email)
         organizer.total_submissions++
         
-        if (submission.status === 'PENDING') organizer.pending_submissions++
-        if (submission.status === 'PUBLISHED') organizer.published_submissions++
-        if (submission.status === 'REJECTED') organizer.rejected_submissions++
+        if (submission.status === 'pending') organizer.pending_submissions++
+        if (submission.status === 'published') organizer.published_submissions++
+        if (submission.status === 'rejected') organizer.rejected_submissions++
         
         // Update last submission date
         if (new Date(submission.created_at) > new Date(organizer.last_submission_date)) {

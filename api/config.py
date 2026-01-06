@@ -12,7 +12,24 @@ class Settings(BaseSettings):
     WP_USER: Optional[str] = None
     WP_APP_PASSWORD: Optional[str] = None
     
+    # API Keys
+    eventbrite_api_token: Optional[str] = None
+    ticketmaster_api_key: Optional[str] = None
+    ticketmaster_affiliate_id: Optional[str] = None
+    
+    # Supabase
+    supabase_url: Optional[str] = None
+    supabase_service_role_key: Optional[str] = None
+    
+    # FTP
+    ftp_host: Optional[str] = None
+    ftp_port: Optional[str] = None
+    ftp_user: Optional[str] = None
+    ftp_password: Optional[str] = None
+    ftp_remote_path: Optional[str] = None
+    
     class Config:
         env_file = ".env"
+        extra = "ignore"  # Ignore extra fields in .env
 
 settings = Settings()

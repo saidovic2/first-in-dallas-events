@@ -196,21 +196,21 @@ scheduler = AsyncIOScheduler()
 def start_scheduler():
     """Start the automated scheduler"""
     
-    # Morning sync: 8 AM Central Time
+    # Hourly sync: Every hour at :00 minutes
     scheduler.add_job(
         sync_all_sources,
-        CronTrigger(hour=8, minute=0, timezone='America/Chicago'),
-        id='morning_sync',
-        name='Morning Event Sync (8 AM CT)',
+        CronTrigger(minute=0, timezone='America/Chicago'),
+        id='hourly_sync',
+        name='Hourly Event Sync & Publish',
         replace_existing=True
     )
     
-    # Evening sync: 6 PM Central Time
+    # Auto-publish check: Every hour at :30 minutes (backup)
     scheduler.add_job(
-        sync_all_sources,
-        CronTrigger(hour=18, minute=0, timezone='America/Chicago'),
-        id='evening_sync',
-        name='Evening Event Sync (6 PM CT)',
+        auto_publish_new_events,
+        CronTrigger(minute=30, timezone='America/Chicago'),
+        id='hourly_publish',
+        name='Hourly Auto-Publish Check',
         replace_existing=True
     )
     
@@ -228,12 +228,12 @@ def start_scheduler():
     logger.info("🚀 AUTOMATED SCHEDULER STARTED")
     logger.info("="*80)
     logger.info("📅 Schedule:")
-    logger.info("  - Morning Sync: 8:00 AM Central Time")
-    logger.info("  - Evening Sync: 6:00 PM Central Time")
+    logger.info("  - Hourly Sync: Every hour at :00 (CT)")
+    logger.info("  - Hourly Auto-Publish: Every hour at :30 (CT)")
     logger.info("  - Daily Cleanup: 2:00 AM Central Time")
     logger.info("="*80)
     logger.info("\n✓ Scheduler is now running in background...")
-    logger.info("✓ Events will auto-sync and publish 2x daily")
+    logger.info("✓ Events will auto-sync and publish EVERY HOUR")
     logger.info("✓ No manual intervention needed!\n")
 
 

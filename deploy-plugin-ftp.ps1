@@ -56,7 +56,7 @@ if ([string]::IsNullOrWhiteSpace($ftpPort)) {
     $ftpPort = "21"
 }
 
-$pluginPath = "wordpress-plugin\events-cms-directory"
+$pluginPath = (Resolve-Path "wordpress-plugin\events-cms-directory").Path
 
 # Step 1: Update version if specified
 if (-not $SkipVersionUpdate -and -not [string]::IsNullOrWhiteSpace($Version)) {

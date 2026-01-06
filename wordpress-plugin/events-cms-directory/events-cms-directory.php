@@ -3,7 +3,7 @@
  * Plugin Name: Events CMS Directory
  * Plugin URI: https://github.com/saidovic2/events-cms-directory
  * Description: Display events from your Events CMS on WordPress pages using shortcodes and widgets
- * Version: 1.1.1
+ * Version: 1.3.0
  * Author: Saidovic
  * Author URI: https://firstindallas.com
  * License: GPL2
@@ -126,7 +126,7 @@ class EventsCMSDirectory {
             'events-cms-directory',
             plugin_dir_url(__FILE__) . 'css/style.css',
             array(),
-            '1.2.0'
+            '1.2.1-' . time()  // Force cache bust
         );
     }
     
@@ -290,16 +290,25 @@ class EventsCMSDirectory {
             return array();
         }
         
-        // CLIENT-SIDE FILTER: Remove past events as backup
-        // (API should already filter, but this ensures clean data)
-        $now = new DateTime('now', new DateTimeZone('UTC'));
-        $filtered_events = array_filter($data, function($event) use ($now) {
+        // CLIENT-SIDE FILTER: Remove past events (Dallas timezone)
+        // Keep events happening TODAY and in the future
+        // Remove events that happened in the past (before today)
+        $dallas_tz = new DateTimeZone('America/Chicago');
+        $now_dallas = new DateTime('now', $dallas_tz);
+        $today_start = clone $now_dallas;
+        $today_start->setTime(0, 0, 0); // Start of today in Dallas time
+        
+        $filtered_events = array_filter($data, function($event) use ($today_start, $dallas_tz) {
             if (empty($event['start_at'])) {
                 return false;
             }
             try {
+                // Parse event date and convert to Dallas timezone
                 $event_date = new DateTime($event['start_at']);
-                return $event_date >= $now;
+                $event_date->setTimezone($dallas_tz);
+                
+                // Keep events from today onwards (remove only past events)
+                return $event_date >= $today_start;
             } catch (Exception $e) {
                 return false;
             }
@@ -485,6 +494,68 @@ class EventsCMSDirectory {
     }
     
     /**
+     * Generate Schema.org JSON-LD for an event
+     */
+    private function generate_schema_json_ld($event) {
+        if (empty($event['title']) || empty($event['start_at'])) {
+            return '';
+        }
+
+        $schema = array(
+            '@context' => 'https://schema.org',
+            '@type' => 'Event',
+            'name' => $event['title'],
+            'startDate' => $event['start_at'],
+            'eventStatus' => 'https://schema.org/EventScheduled',
+            'eventAttendanceMode' => 'https://schema.org/OfflineEventAttendanceMode',
+            'description' => !empty($event['description']) ? wp_strip_all_tags($event['description']) : $event['title'],
+            'url' => !empty($event['source_url']) ? $event['source_url'] : '',
+            'image' => !empty($event['image_url']) ? array($event['image_url']) : array(),
+        );
+
+        if (!empty($event['end_at'])) {
+            $schema['endDate'] = $event['end_at'];
+        }
+
+        // Location
+        $location = array(
+            '@type' => 'Place',
+            'name' => !empty($event['venue']) ? $event['venue'] : 'Dallas Area',
+            'address' => array(
+                '@type' => 'PostalAddress',
+                'addressLocality' => !empty($event['city']) ? $event['city'] : 'Dallas',
+                'addressRegion' => 'TX',
+                'addressCountry' => 'US'
+            )
+        );
+        
+        if (!empty($event['address'])) {
+            $location['address']['streetAddress'] = $event['address'];
+        }
+        
+        $schema['location'] = $location;
+
+        // Offers
+        $offer = array(
+            '@type' => 'Offer',
+            'url' => !empty($event['source_url']) ? $event['source_url'] : '',
+            'availability' => 'https://schema.org/InStock'
+        );
+
+        if ($event['price_tier'] === 'FREE') {
+            $offer['price'] = '0';
+            $offer['priceCurrency'] = 'USD';
+        } elseif (!empty($event['price_amount'])) {
+            $offer['price'] = (string)$event['price_amount'];
+            $offer['priceCurrency'] = 'USD';
+        }
+
+        $schema['offers'] = $offer;
+
+        return '<script type="application/ld+json">' . json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . '</script>';
+    }
+
+    /**
      * Generate HTML for events list
      */
     private function generate_events_html($events) {
@@ -493,11 +564,13 @@ class EventsCMSDirectory {
         <div class="events-cms-directory">
             <div class="events-grid">
                 <?php foreach ($events as $event): ?>
-                    <div class="event-card">
+                    <?php echo $this->generate_schema_json_ld($event); ?>
+                    <article class="event-card">
                         <?php if (!empty($event['image_url'])): ?>
                             <div class="event-image">
                                 <img src="<?php echo esc_url($event['image_url']); ?>" 
-                                     alt="<?php echo esc_attr($event['title']); ?>">
+                                     alt="<?php echo esc_attr($event['title']); ?>"
+                                     loading="lazy">
                             </div>
                         <?php endif; ?>
                         
@@ -511,8 +584,10 @@ class EventsCMSDirectory {
                                     </svg>
                                     <?php 
                                     $date = new DateTime($event['start_at']);
-                                    echo esc_html($date->format('F j, Y'));
                                     ?>
+                                    <time datetime="<?php echo esc_attr($event['start_at']); ?>">
+                                        <?php echo esc_html($date->format('F j, Y')); ?>
+                                    </time>
                                 </div>
                                 
                                 <?php if (!empty($event['venue'])): ?>
@@ -551,7 +626,20 @@ class EventsCMSDirectory {
                                     ?>
                                 </div>
                                 
-                                <?php if (!empty($event['source_url'])): ?>
+                                <?php 
+                                // Prioritize WordPress post link for internal SEO
+                                if (!empty($event['wp_post_id'])): 
+                                    $post_url = get_permalink($event['wp_post_id']);
+                                    if ($post_url): 
+                                ?>
+                                    <a href="<?php echo esc_url($post_url); ?>" 
+                                       class="event-link">
+                                        View Details →
+                                    </a>
+                                <?php 
+                                    endif;
+                                elseif (!empty($event['source_url'])): 
+                                ?>
                                     <a href="<?php echo esc_url($event['source_url']); ?>" 
                                        class="event-link" 
                                        target="_blank" 
@@ -561,7 +649,7 @@ class EventsCMSDirectory {
                                 <?php endif; ?>
                             </div>
                         </div>
-                    </div>
+                    </article>
                 <?php endforeach; ?>
             </div>
         </div>
@@ -629,7 +717,21 @@ class EventsCMS_Upcoming_Events_Widget extends WP_Widget {
                 <?php endif; ?>
                 <div class="eventscms-widget-event-content">
                     <h4 class="eventscms-widget-event-title">
-                        <?php if (!empty($event['source_url'])): ?>
+                        <?php 
+                        // Prioritize WordPress post link for internal SEO
+                        if (!empty($event['wp_post_id'])): 
+                            $post_url = get_permalink($event['wp_post_id']);
+                            if ($post_url): 
+                        ?>
+                            <a href="<?php echo esc_url($post_url); ?>">
+                                <?php echo esc_html($event['title']); ?>
+                            </a>
+                        <?php 
+                            else:
+                                echo esc_html($event['title']);
+                            endif;
+                        elseif (!empty($event['source_url'])): 
+                        ?>
                             <a href="<?php echo esc_url($event['source_url']); ?>" 
                                target="_blank" 
                                rel="noopener noreferrer">

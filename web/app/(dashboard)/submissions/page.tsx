@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -14,10 +15,12 @@ export default function SubmissionsPage() {
   const [submissions, setSubmissions] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'pending' | 'published' | 'rejected'>('pending')
+  const searchParams = useSearchParams()
+  const organizerEmail = searchParams.get('organizer')
 
   useEffect(() => {
     loadSubmissions()
-  }, [filter])
+  }, [filter, organizerEmail])
 
   const loadSubmissions = async () => {
     try {
@@ -28,6 +31,11 @@ export default function SubmissionsPage() {
 
       if (filter !== 'all') {
         query = query.eq('status', filter)
+      }
+
+      // Filter by organizer email if provided
+      if (organizerEmail) {
+        query = query.eq('organizer_contact', organizerEmail)
       }
 
       const { data, error } = await query
@@ -150,7 +158,11 @@ export default function SubmissionsPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold">Organizer Submissions</h1>
-          <p className="text-gray-600 mt-1">Review and approve events submitted by organizers</p>
+          <p className="text-gray-600 mt-1">
+            {organizerEmail 
+              ? `Viewing submissions from: ${organizerEmail}` 
+              : 'Review and approve events submitted by organizers'}
+          </p>
         </div>
         {pendingCount > 0 && (
           <Badge className="bg-yellow-100 text-yellow-800 border-yellow-300 px-4 py-2 text-base">

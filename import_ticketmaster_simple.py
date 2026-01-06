@@ -15,7 +15,7 @@ from dotenv import load_dotenv
 
 # Configuration
 APIFY_API_TOKEN = "apify_api_SyxGrvd54Tx0gfbRlbqfIK823e4Bf11UutCW"
-DATASET_ID = "tTjM7nfqGag5B4nE9"  # 1000 events from run w5cFnw5KJFzrzQYef
+DATASET_ID = "wrMOybEHy5UW00HNh"  # New actor - run diYKCxH67W2jfS4tI
 TICKETMASTER_AFFILIATE_ID = "6497023"
 
 # Database URL - Railway public connection

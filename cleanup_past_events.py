@@ -1,51 +1,49 @@
 """
-Script to delete past events from the database
-Run this once to clean up any outdated events
+Script to archive past events on WordPress (SEO-friendly)
+Moves past events to 'Past Events' category instead of deleting
+This preserves SEO value and prevents 404 errors
 """
 import os
 import sys
-from datetime import datetime, timezone
+import asyncio
 
-# Add worker directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'worker'))
+# Add api directory to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'api'))
 
-from database import get_db
-from models.event import Event
+from utils.wordpress import archive_past_wordpress_events
 
-def cleanup_past_events():
-    db = next(get_db())
+async def main():
+    print("📦 Archiving Past Events (SEO-Friendly)")
+    print("=" * 50)
+    print("This will move past events to 'Past Events' category")
+    print("instead of deleting them, preserving SEO value.\n")
     
-    # Get current time
-    now = datetime.now(timezone.utc)
+    # Confirm action
+    response = input("⚠️  Archive past events to 'Past Events' category? (yes/no): ")
     
-    # Count past events
-    past_events = db.query(Event).filter(Event.start_at < now).all()
-    count = len(past_events)
-    
-    if count == 0:
-        print("✅ No past events found. Database is clean!")
+    if response.lower() != 'yes':
+        print("\n❌ Archive cancelled")
         return
     
-    print(f"📊 Found {count} past events to delete:\n")
+    print("\n📊 Archiving WordPress posts...\n")
     
-    # Show sample
-    for event in past_events[:5]:
-        print(f"   - {event.title} (Date: {event.start_at.date()})")
+    try:
+        result = await archive_past_wordpress_events(hours_after=24)
+        
+        print("\n" + "=" * 50)
+        print("✅ Archive Complete!")
+        print(f"   Posts checked: {result['posts_checked']}")
+        print(f"   Posts archived: {result['archived_count']}")
+        print(f"   Cutoff time: {result['cutoff_time']}")
+        print("\n💡 Archived posts are now in 'Past Events' category")
+        print("   URLs remain active for SEO purposes!")
+        
+    except Exception as e:
+        print(f"\n❌ Error: {e}")
+        return 1
     
-    if count > 5:
-        print(f"   ... and {count - 5} more\n")
-    
-    # Confirm deletion
-    response = input(f"\n⚠️  Delete all {count} past events? (yes/no): ")
-    
-    if response.lower() == 'yes':
-        # Delete past events
-        deleted = db.query(Event).filter(Event.start_at < now).delete()
-        db.commit()
-        print(f"\n✅ Successfully deleted {deleted} past events!")
-        print("🎉 Database now contains only upcoming events")
-    else:
-        print("\n❌ Cleanup cancelled")
+    return 0
 
 if __name__ == "__main__":
-    cleanup_past_events()
+    exit_code = asyncio.run(main())
+    sys.exit(exit_code)

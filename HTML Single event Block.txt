@@ -1,0 +1,47 @@
+<!-- wp:group {"align":"wide","layout":{"type":"constrained"}} -->
+<div class="wp-block-group alignwide"><!-- wp:group {"metadata":{"patternName":"core/block/3674","name":"Event Block 2"},"align":"wide","layout":{"type":"grid","columnCount":2,"minimumColumnWidth":null}} -->
+<div class="wp-block-group alignwide"><!-- wp:image {"id":3644,"aspectRatio":"4/3","scale":"cover","sizeSlug":"full","linkDestination":"none"} -->
+<figure class="wp-block-image size-full"><img src="https://firstindallas.com/wp-content/uploads/2025/12/FotoJet-2025-09-08T133055.808-1024x688-1.jpg" alt="" class="wp-image-3644" style="aspect-ratio:4/3;object-fit:cover"/></figure>
+<!-- /wp:image -->
+
+<!-- wp:group {"style":{"layout":{"columnSpan":1,"rowSpan":1}},"layout":{"type":"constrained"}} -->
+<div class="wp-block-group"><!-- wp:group {"layout":{"type":"constrained"}} -->
+<div class="wp-block-group"><!-- wp:group {"style":{"dimensions":{"minHeight":"300px"}},"layout":{"type":"constrained"}} -->
+<div class="wp-block-group" style="min-height:300px"><!-- wp:group {"layout":{"type":"constrained"}} -->
+<div class="wp-block-group"><!-- wp:group {"align":"wide","layout":{"type":"constrained"}} -->
+<div class="wp-block-group alignwide"><!-- wp:heading {"level":1} -->
+<h1 class="wp-block-heading"></h1>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:buttons -->
+<div class="wp-block-buttons"><!-- wp:button -->
+<div class="wp-block-button"><a class="wp-block-button__link wp-element-button"></a></div>
+<!-- /wp:button --></div>
+<!-- /wp:buttons --></div>
+<!-- /wp:group --></div>
+<!-- /wp:group --></div>
+<!-- /wp:group --></div>
+<!-- /wp:group --></div>
+<!-- /wp:group -->
+
+<!-- wp:paragraph -->
+<p></p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:group --></div>
+<!-- /wp:group -->
+
+<!-- wp:paragraph -->
+<p></p>
+<!-- /wp:paragraph -->

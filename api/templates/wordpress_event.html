@@ -1,0 +1,43 @@
+<!-- wp:group {"metadata":{"patternName":"core/block/3674","name":"Event Block 2"},"align":"wide","layout":{"type":"grid","columnCount":2,"minimumColumnWidth":null}} -->
+<div class="wp-block-group alignwide"><!-- wp:image {"aspectRatio":"4/3","scale":"cover","sizeSlug":"full","linkDestination":"none"} -->
+<figure class="wp-block-image size-full"><img src="{{image_url}}" alt="{{image_alt}}" style="aspect-ratio:4/3;object-fit:cover"/></figure>
+<!-- /wp:image -->
+
+<!-- wp:group {"style":{"layout":{"columnSpan":1,"rowSpan":1}},"layout":{"type":"constrained"}} -->
+<div class="wp-block-group"><!-- wp:paragraph -->
+<p style="color: #000000;"><strong>📅 Date:</strong> {{start_at}}</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p style="color: #000000;"><strong>📍 Venue:</strong> {{venue}}, {{city}}</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p style="color: #000000;"><strong>💵 Price:</strong> {{price}}</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:buttons -->
+<div class="wp-block-buttons"><!-- wp:button -->
+<div class="wp-block-button"><a class="wp-block-button__link wp-element-button" href="{{source_url}}" target="_blank" rel="noopener">Get Tickets</a></div>
+<!-- /wp:button --></div>
+<!-- /wp:buttons --></div>
+<!-- /wp:group --></div>
+<!-- /wp:group -->
+
+<!-- wp:heading {"level":2} -->
+<h2 class="wp-block-heading" style="color: #000000;">Event Details</h2>
+<!-- /wp:heading -->
+
+<!-- wp:html -->
+<div style="color: #000000;">
+{{description}}
+</div>
+<!-- /wp:html -->
+
+<!-- wp:paragraph -->
+<p style="color: #000000;"><strong>Address:</strong> {{address}}</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:html -->
+{{google_maps}}
+<!-- /wp:html -->

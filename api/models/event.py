@@ -16,6 +16,7 @@ class SourceType(str, enum.Enum):
     ICS = "ics"
     RSS = "rss"
     MANUAL = "manual"
+    FACEBOOK = "FACEBOOK"
     DALLAS_ARBORETUM = "DALLAS_ARBORETUM"
     KLYDE_WARREN_PARK = "KLYDE_WARREN_PARK"
     PEROT_MUSEUM = "PEROT_MUSEUM"
