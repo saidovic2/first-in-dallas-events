@@ -174,29 +174,33 @@ export default function SubmissionsPage() {
       {/* Filter Tabs */}
       <div className="flex gap-2 mb-6">
         <Button
-          variant={filter === 'pending' ? 'default' : 'outline'}
+          variant="outline"
           onClick={() => setFilter('pending')}
+          className={filter === 'pending' ? 'bg-yellow-500 text-white hover:bg-yellow-600 border-yellow-600' : 'hover:bg-yellow-50 border-yellow-300 text-yellow-700'}
         >
           <Clock className="h-4 w-4 mr-2" />
           Pending ({submissions.filter(s => s.status === 'pending').length})
         </Button>
         <Button
-          variant={filter === 'published' ? 'default' : 'outline'}
+          variant="outline"
           onClick={() => setFilter('published')}
+          className={filter === 'published' ? 'bg-green-500 text-white hover:bg-green-600 border-green-600' : 'hover:bg-green-50 border-green-300 text-green-700'}
         >
           <CheckCircle className="h-4 w-4 mr-2" />
-          Published
+          Published ({submissions.filter(s => s.status === 'published').length})
         </Button>
         <Button
-          variant={filter === 'rejected' ? 'default' : 'outline'}
+          variant="outline"
           onClick={() => setFilter('rejected')}
+          className={filter === 'rejected' ? 'bg-red-500 text-white hover:bg-red-600 border-red-600' : 'hover:bg-red-50 border-red-300 text-red-700'}
         >
           <XCircle className="h-4 w-4 mr-2" />
-          Rejected
+          Rejected ({submissions.filter(s => s.status === 'rejected').length})
         </Button>
         <Button
-          variant={filter === 'all' ? 'default' : 'outline'}
+          variant="outline"
           onClick={() => setFilter('all')}
+          className={filter === 'all' ? 'bg-blue-500 text-white hover:bg-blue-600 border-blue-600' : 'hover:bg-blue-50 border-blue-300 text-blue-700'}
         >
           All ({submissions.length})
         </Button>
