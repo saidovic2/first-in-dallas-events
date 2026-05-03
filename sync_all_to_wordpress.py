@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'api'))
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from models.event import Event
-from utils.wordpress import publish_to_wordpress, cleanup_past_wordpress_events
+from utils.wordpress import publish_to_wordpress, archive_past_wordpress_events
 from utils.llm_enhancer import enhance_event_description
 from config import settings
 
@@ -58,7 +58,7 @@ async def bulk_sync(
     if cleanup_first and not dry_run:
         print("🧹 Step 1: Cleaning up past WordPress events...")
         try:
-            cleanup_result = await cleanup_past_wordpress_events(hours_after=24)
+            cleanup_result = await archive_past_wordpress_events(hours_after=24)
             print(f"   ✅ Cleaned {cleanup_result['trashed_count']} past events")
         except Exception as e:
             print(f"   ⚠️  Cleanup failed: {e}")
