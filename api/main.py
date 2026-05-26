@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routes import auth, events, tasks, stats, sync, ticketmaster, featured, scheduler_control, checkout
+from routes import auth, events, tasks, stats, sync, ticketmaster, featured, scheduler_control, checkout, webhook
 from database import engine, Base
 
 app = FastAPI(
@@ -50,6 +50,7 @@ app.include_router(sync.router, prefix="/api/sync", tags=["Bulk Sync"])
 app.include_router(ticketmaster.router, prefix="/api/ticketmaster", tags=["Ticketmaster"])
 app.include_router(scheduler_control.router, prefix="/api/scheduler", tags=["Scheduler"])
 app.include_router(checkout.router, prefix="/api/checkout", tags=["Checkout"])
+app.include_router(webhook.router, prefix="/api/stripe", tags=["Stripe Webhook"])
 
 @app.get("/")
 async def root():
