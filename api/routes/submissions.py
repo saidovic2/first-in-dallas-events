@@ -1,3 +1,5 @@
+import hashlib
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
@@ -38,23 +40,27 @@ async def create_submission(
 ):
     """Create new event submission from organizer portal"""
     try:
-        # Create event with PENDING status
+        # Stable dedup hash for organizer submissions
+        fid_hash = hashlib.md5(
+            f"{submission.title}{submission.start_date}{submission.organizer_id}".encode()
+        ).hexdigest()
+
         event = Event(
             title=submission.title,
-            source_url=submission.primary_url,
+            source_url=submission.primary_url or "",   # NOT NULL — default empty when no URL
             venue=submission.venue,
             address=submission.address,
             city=submission.city,
-            state=submission.state,
             start_at=datetime.fromisoformat(submission.start_date.replace('Z', '+00:00')),
             end_at=datetime.fromisoformat(submission.end_date.replace('Z', '+00:00')) if submission.end_date else None,
             price_amount=submission.price,
             price_tier=submission.price_tier.upper(),
             image_url=submission.image_url,
             description=submission.description,
-            status="PENDING",  # Submissions start as PENDING
+            status="PENDING",   # Submissions start PENDING; payment webhook flips to PUBLISHED
             source_type="organizer_submission",
-            category=submission.submission_type.upper()  # Store FREE or PAID in category
+            fid_hash=fid_hash,
+            # category intentionally NOT set from submission_type — organizers can set it later
         )
         
         db.add(event)
