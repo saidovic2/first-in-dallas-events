@@ -11,6 +11,8 @@ from dateutil import parser as date_parser
 from typing import List, Dict, Optional
 import re
 
+from utils.timezone import ensure_utc
+
 
 class KlydeWarrenParkExtractor:
     """Extract events from Klyde Warren Park"""
@@ -194,17 +196,17 @@ class KlydeWarrenParkExtractor:
                 start_datetime_str += f" {time_start}"
             
             try:
-                start_at = date_parser.parse(start_datetime_str)
+                start_at = ensure_utc(date_parser.parse(start_datetime_str))
             except:
                 print(f"      ⚠️  Could not parse date: {start_datetime_str}")
                 return None
-            
+
             # Parse end time if available
             end_at = None
             if time_end:
                 end_datetime_str = date_text + f" {time_end}"
                 try:
-                    end_at = date_parser.parse(end_datetime_str)
+                    end_at = ensure_utc(date_parser.parse(end_datetime_str))
                 except:
                     pass
             
