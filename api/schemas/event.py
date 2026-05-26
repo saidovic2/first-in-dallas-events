@@ -1,7 +1,16 @@
-from pydantic import BaseModel, HttpUrl, field_validator
+import logging
+
+from pydantic import BaseModel, HttpUrl, ValidationInfo, field_validator
 from datetime import datetime
 from typing import Optional
 from decimal import Decimal
+
+_PRICE_TIER_MAP = {
+    'free':     'free',
+    'paid':     'paid',
+    'donation': 'free',
+    'premium':  'paid',
+}
 
 class EventCreate(BaseModel):
     title: str
@@ -59,6 +68,21 @@ class EventResponse(BaseModel):
     @classmethod
     def coerce_none_to_empty_string(cls, v: Optional[str]) -> str:
         return "" if v is None else v
+
+    @field_validator('price_tier', mode='before')
+    @classmethod
+    def normalize_price_tier(cls, v: str, info: ValidationInfo) -> str:
+        if v is None:
+            return 'paid'
+        normalized = _PRICE_TIER_MAP.get(str(v).lower())
+        if normalized is None:
+            event_id = (info.data or {}).get('id', '?')
+            logging.warning(
+                "EventResponse: unrecognized price_tier %r for event id=%s, falling back to 'paid'",
+                v, event_id,
+            )
+            return 'paid'
+        return normalized
 
     class Config:
         from_attributes = True
