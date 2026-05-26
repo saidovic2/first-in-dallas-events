@@ -27,7 +27,21 @@ class Settings(BaseSettings):
     ftp_user: Optional[str] = None
     ftp_password: Optional[str] = None
     ftp_remote_path: Optional[str] = None
-    
+
+    # Stripe — test keys until Section 4 go-live.
+    # IMPORTANT: use price_... IDs (Price IDs), NOT prod_... IDs (Product IDs).
+    # This repo tags every Stripe object with metadata product="fid_events" to
+    # isolate from the directory's Stripe objects (product="first_in_dallas").
+    STRIPE_SECRET_KEY: Optional[str] = None          # sk_test_... / sk_live_...
+    STRIPE_WEBHOOK_SECRET: Optional[str] = None      # whsec_...  (separate from directory's)
+    STRIPE_PUBLISHABLE_KEY: Optional[str] = None     # pk_test_... / pk_live_...
+    STRIPE_PRICE_SINGLE: Optional[str] = None        # price_... one-time $19 single submission
+    STRIPE_PRICE_UNLIMITED: Optional[str] = None     # price_... recurring $49/mo subscription
+    STRIPE_PRICE_FEATURED: Optional[str] = None      # price_... one-time $29 featured add-on
+
+    # Hub origin — used for Stripe success/cancel redirect URLs
+    HUB_URL: str = "http://localhost:3001"
+
     class Config:
         env_file = ".env"
         extra = "ignore"  # Ignore extra fields in .env
