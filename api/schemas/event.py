@@ -1,4 +1,4 @@
-from pydantic import BaseModel, HttpUrl
+from pydantic import BaseModel, HttpUrl, field_validator
 from datetime import datetime
 from typing import Optional
 from decimal import Decimal
@@ -40,9 +40,9 @@ class EventResponse(BaseModel):
     description: Optional[str]
     start_at: datetime
     end_at: Optional[datetime]
-    venue: Optional[str]
-    address: Optional[str]
-    city: Optional[str]
+    venue: str = ""
+    address: str = ""
+    city: str = ""
     price_tier: str
     price_amount: Optional[Decimal]
     image_url: Optional[str]
@@ -54,7 +54,12 @@ class EventResponse(BaseModel):
     wp_post_id: Optional[int]
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
-    
+
+    @field_validator('venue', 'address', 'city', mode='before')
+    @classmethod
+    def coerce_none_to_empty_string(cls, v: Optional[str]) -> str:
+        return "" if v is None else v
+
     class Config:
         from_attributes = True
 
