@@ -11,6 +11,8 @@ from dateutil import parser as date_parser
 from typing import List, Dict, Optional
 import re
 
+from utils.timezone import ensure_utc
+
 
 class DallasLibraryExtractor:
     """Extract events from Dallas Public Library"""
@@ -130,7 +132,7 @@ class DallasLibraryExtractor:
             
             # Parse date
             try:
-                start_at = date_parser.parse(date_text)
+                start_at = ensure_utc(date_parser.parse(date_text))
                 
                 # Skip past events - keep today and future events
                 from datetime import datetime, timezone

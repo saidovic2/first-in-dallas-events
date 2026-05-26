@@ -10,6 +10,8 @@ from datetime import datetime
 from dateutil import parser as date_parser
 from typing import List, Dict, Optional
 
+from utils.timezone import ensure_utc
+
 
 class DallasArboretumExtractor:
     """Extract events from Dallas Arboretum & Botanical Garden"""
@@ -155,11 +157,11 @@ class DallasArboretumExtractor:
                 return None
             
             # Parse dates
-            start_at = date_parser.parse(start_date)
+            start_at = ensure_utc(date_parser.parse(start_date))
             end_at = None
             if data.get('endDate'):
                 try:
-                    end_at = date_parser.parse(data['endDate'])
+                    end_at = ensure_utc(date_parser.parse(data['endDate']))
                 except:
                     pass
             

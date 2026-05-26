@@ -11,6 +11,8 @@ from dateutil import parser as date_parser
 from typing import List, Dict, Optional
 import re
 
+from utils.timezone import ensure_utc
+
 
 class DallasZooExtractor:
     """Extract events from Dallas Zoo"""
@@ -124,8 +126,8 @@ class DallasZooExtractor:
             description = data.get('description', '')
             
             # Parse dates
-            start_at = date_parser.parse(start_date)
-            
+            start_at = ensure_utc(date_parser.parse(start_date))
+
             # Skip past events - keep today and future events
             from datetime import datetime, timezone
             now = datetime.now(timezone.utc)
@@ -133,11 +135,11 @@ class DallasZooExtractor:
             if start_at.date() < now.date():
                 print(f"      ⏭️  Skipping past event (date: {start_at.date()})")
                 return None
-            
+
             end_at = None
             if data.get('endDate'):
                 try:
-                    end_at = date_parser.parse(data.get('endDate'))
+                    end_at = ensure_utc(date_parser.parse(data.get('endDate')))
                 except:
                     pass
             
@@ -237,7 +239,7 @@ class DallasZooExtractor:
             
             if date_match:
                 try:
-                    start_at = date_parser.parse(matched_text)
+                    start_at = ensure_utc(date_parser.parse(matched_text))
                     print(f"      📅 Parsed date: {matched_text} → {start_at.date()}")
                 except Exception as e:
                     print(f"      ⚠️  Failed to parse '{matched_text}': {str(e)[:50]}")
@@ -258,7 +260,7 @@ class DallasZooExtractor:
                         'winter': f'December 1, {year}',
                         'holiday': f'December 1, {year}'
                     }
-                    start_at = date_parser.parse(season_dates.get(season, f'January 1, {year}'))
+                    start_at = ensure_utc(date_parser.parse(season_dates.get(season, f'January 1, {year}')))
                     print(f"      📅 Found seasonal date: {season} {year}")
                 else:
                     # If no date found, assume it's a current/ongoing event
