@@ -32,14 +32,30 @@ export interface EventSubmissionData {
 }
 
 export const submissionsApi = {
-  create: (data: EventSubmissionData) => 
-    api.post('/submissions', data),
-  
+  create: (data: EventSubmissionData) =>
+    api.post<{ id: number; status: string; message: string }>('/submissions', data),
+
   getByOrganizer: (organizerId: string) =>
     api.get(`/submissions/by-organizer/${organizerId}`),
-  
+
   getById: (id: string) =>
     api.get(`/submissions/${id}`),
+}
+
+export interface CheckoutRequest {
+  plan: 'single' | 'unlimited'
+  featured: boolean
+  event_id: number
+}
+
+export interface CheckoutResponse {
+  checkout_url: string
+  session_id: string
+}
+
+export const checkoutApi = {
+  createSession: (data: CheckoutRequest) =>
+    api.post<CheckoutResponse>('/checkout/session', data),
 }
 
 export const eventsApi = {
