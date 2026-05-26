@@ -10,26 +10,8 @@ export async function GET(request: Request) {
     const supabase = createRouteHandlerClient({ cookies })
     const { data: { session } } = await supabase.auth.exchangeCodeForSession(code)
     
-    // If user signed in with Google, create organizer profile if it doesn't exist
-    if (session?.user) {
-      const { data: existingProfile } = await supabase
-        .from('organizers')
-        .select('id')
-        .eq('id', session.user.id)
-        .single()
-      
-      // Create organizer profile for new Google users
-      if (!existingProfile) {
-        await supabase
-          .from('organizers')
-          .insert({
-            id: session.user.id,
-            email: session.user.email,
-            full_name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || '',
-            organization_name: '',
-          })
-      }
-    }
+    // Organizer row is created automatically by the handle_new_user DB trigger
+    // when the user is first added to auth.users — no client-side insert needed.
   }
 
   // Redirect to dashboard on the same domain the callback was called from

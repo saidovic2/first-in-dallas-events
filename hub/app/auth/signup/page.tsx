@@ -42,19 +42,14 @@ export default function SignupPage() {
       if (authError) throw authError
 
       if (authData.user) {
-        // Create organizer profile
-        const { error: profileError } = await supabase
-          .from('organizers')
-          .insert({
-            id: authData.user.id,
-            email: formData.email,
-            full_name: formData.fullName,
-            organization_name: formData.organizationName,
-          })
-
-        if (profileError) throw profileError
-
-        router.push('/dashboard')
+        // Organizer row is created automatically by the handle_new_user DB trigger.
+        // If email confirmation is enabled, the user won't have a session yet —
+        // redirect to a confirmation-pending page instead of the dashboard.
+        if (authData.session) {
+          router.push('/dashboard')
+        } else {
+          router.push('/auth/confirm')
+        }
       }
     } catch (error: any) {
       if (error.message?.includes('fetch')) {
