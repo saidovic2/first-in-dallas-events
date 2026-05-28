@@ -60,4 +60,12 @@ export const statsApi = {
   get: () => api.get('/api/stats/'),
 }
 
+export const submissionsApi = {
+  list: (status?: string) =>
+    api.get('/api/submissions/admin/all', { params: status ? { status } : undefined }),
+  approve: (id: number) => api.patch(`/api/submissions/${id}/approve`),
+  reject: (id: number, reason: string) =>
+    api.patch(`/api/submissions/${id}/reject`, null, { params: { reason } }),
+}
+
 export default api

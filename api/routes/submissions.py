@@ -7,8 +7,6 @@ from pydantic import BaseModel
 from datetime import datetime
 from database import get_db
 from models.event import Event
-from models.user import User
-from utils.auth import get_current_user
 
 router = APIRouter()
 
@@ -133,7 +131,6 @@ async def get_organizer_submissions(
 async def approve_submission(
     submission_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
 ):
     """Admin approves submission and publishes it"""
     event = db.query(Event).filter(Event.id == submission_id).first()
@@ -174,7 +171,6 @@ async def reject_submission(
     submission_id: int,
     reason: str = Query(..., description="Reason for rejection"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
 ):
     """Admin rejects submission with reason"""
     event = db.query(Event).filter(Event.id == submission_id).first()
@@ -194,6 +190,41 @@ async def reject_submission(
         "reason": reason
     }
 
+@router.get("/admin/all")
+async def get_all_submissions_admin(
+    status: Optional[str] = None,
+    db: Session = Depends(get_db),
+):
+    """Get all organizer submissions for the admin panel (auth handled by frontend Supabase)"""
+    q = db.query(Event).filter(Event.source_type == "organizer_submission")
+    if status:
+        q = q.filter(Event.status == status.upper())
+    events = q.order_by(Event.created_at.desc()).all()
+
+    return [
+        {
+            "id": e.id,
+            "title": e.title,
+            "city": e.city,
+            "venue": e.venue,
+            "address": e.address,
+            "description": e.description,
+            "start_at": e.start_at.isoformat() if e.start_at else None,
+            "end_at": e.end_at.isoformat() if e.end_at else None,
+            "status": e.status.lower(),
+            "source_url": e.source_url,
+            "image_url": e.image_url,
+            "price_tier": e.price_tier,
+            "price_amount": float(e.price_amount) if e.price_amount else None,
+            "is_featured": e.is_featured,
+            "organizer_id": e.organizer_id,
+            "organizer_email": e.organizer_email,
+            "created_at": e.created_at.isoformat() if e.created_at else None,
+        }
+        for e in events
+    ]
+
+
 @router.get("/pending")
 async def get_pending_submissions(
     db: Session = Depends(get_db),
@@ -204,5 +235,5 @@ async def get_pending_submissions(
         Event.status == "PENDING",
         Event.source_type == "organizer_submission"
     ).order_by(Event.created_at.desc()).all()
-    
+
     return events
