@@ -218,17 +218,15 @@ function SubmissionsContent() {
                         {/* Published Event - Show link and live status */}
                         {submission.status === 'published' && (
                           <>
-                            {submission.wp_url && (
-                              <a
-                                href={submission.wp_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-sm text-primary-600 hover:text-primary-700 flex items-center"
-                              >
-                                View on First in Dallas
-                                <ExternalLink className="h-3.5 w-3.5 ml-1" />
-                              </a>
-                            )}
+                            <a
+                              href={submission.wp_url || 'https://firstindallas.com'}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-sm text-primary-600 hover:text-primary-700 flex items-center"
+                            >
+                              View on First in Dallas
+                              <ExternalLink className="h-3.5 w-3.5 ml-1" />
+                            </a>
                             <span className="text-sm text-green-600 flex items-center">
                               <CheckCircle className="h-3.5 w-3.5 mr-1" />
                               Live on calendar
