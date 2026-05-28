@@ -76,6 +76,18 @@ async def create_submission(
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Failed to create submission: {str(e)}")
 
+@router.get("/{submission_id}/")
+async def get_submission(
+    submission_id: int,
+    db: Session = Depends(get_db)
+):
+    """Get a single submission by ID (used by hub success page to poll for PUBLISHED status)"""
+    event = db.query(Event).filter(Event.id == submission_id).first()
+    if not event:
+        raise HTTPException(status_code=404, detail="Submission not found")
+    return {"id": event.id, "status": event.status, "title": event.title}
+
+
 @router.get("/by-organizer/{organizer_id}")
 async def get_organizer_submissions(
     organizer_id: str,

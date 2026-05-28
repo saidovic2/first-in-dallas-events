@@ -33,13 +33,13 @@ export interface EventSubmissionData {
 
 export const submissionsApi = {
   create: (data: EventSubmissionData) =>
-    api.post<{ id: number; status: string; message: string }>('/submissions', data),
+    api.post<{ id: number; status: string; message: string }>('/submissions/', data),
 
   getByOrganizer: (organizerId: string) =>
     api.get(`/submissions/by-organizer/${organizerId}`),
 
   getById: (id: string) =>
-    api.get(`/submissions/${id}`),
+    api.get(`/submissions/${id}/`),
 }
 
 export interface CheckoutRequest {
