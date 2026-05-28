@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Nav } from '@/components/layout/nav'
@@ -12,6 +12,14 @@ import { submissionsApi } from '@/lib/api'
 type PublishState = 'polling' | 'published' | 'timeout'
 
 export default function SubmitSuccessPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-50"><Nav /><div className="max-w-lg mx-auto pt-20 px-4 text-center text-gray-500">Loading…</div></div>}>
+      <SuccessContent />
+    </Suspense>
+  )
+}
+
+function SuccessContent() {
   const params = useSearchParams()
   const eventId = params.get('event_id')
   const [state, setState] = useState<PublishState>('polling')

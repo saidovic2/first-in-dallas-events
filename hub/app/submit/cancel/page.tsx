@@ -1,5 +1,6 @@
 'use client'
 
+import { Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Nav } from '@/components/layout/nav'
@@ -8,6 +9,14 @@ import { Button } from '@/components/ui/button'
 import { XCircle, ArrowLeft } from 'lucide-react'
 
 export default function SubmitCancelPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-50"><Nav /><div className="max-w-lg mx-auto pt-20 px-4 text-center text-gray-500">Loading…</div></div>}>
+      <CancelContent />
+    </Suspense>
+  )
+}
+
+function CancelContent() {
   const params = useSearchParams()
   const eventId = params.get('event_id')
 
