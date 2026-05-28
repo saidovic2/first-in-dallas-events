@@ -1,73 +1,78 @@
 'use client'
 
-import { Suspense, useEffect, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
-import Link from 'next/link'
+import { Suspense, useEffect, useRef, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Nav } from '@/components/layout/nav'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Check, Loader2, Calendar } from 'lucide-react'
+import { Check, Loader2 } from 'lucide-react'
 import { submissionsApi } from '@/lib/api'
 
 type PublishState = 'polling' | 'published' | 'timeout'
 
 export default function SubmitSuccessPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-gray-50"><Nav /><div className="max-w-lg mx-auto pt-20 px-4 text-center text-gray-500">Loading…</div></div>}>
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50">
+        <Nav />
+        <div className="max-w-lg mx-auto pt-20 px-4 text-center text-gray-500">Loading…</div>
+      </div>
+    }>
       <SuccessContent />
     </Suspense>
   )
 }
 
 function SuccessContent() {
+  const router = useRouter()
   const params = useSearchParams()
   const eventId = params.get('event_id')
   const [state, setState] = useState<PublishState>('polling')
-  const [attempts, setAttempts] = useState(0)
+  const attemptRef = useRef(0)  // ref avoids stale-closure bug with useState
 
-  // Poll the submission endpoint until status becomes PUBLISHED or we give up.
-  // Stripe webhooks typically fire within 2-5 seconds of checkout completion.
+  // Auto-redirect to dashboard once published (or on timeout)
   useEffect(() => {
-    if (!eventId) {
-      setState('published') // no ID to check — show success anyway
-      return
+    if (state === 'published' || state === 'timeout') {
+      const t = setTimeout(() => router.replace('/submissions'), 2500)
+      return () => clearTimeout(t)
     }
+  }, [state, router])
 
+  // Poll Railway API until event status is PUBLISHED
+  useEffect(() => {
+    if (!eventId) { setState('published'); return }
+
+    const MAX = 12        // 12 × 3 s = 36 s
+    const INTERVAL = 3000
     let cancelled = false
-    const MAX_ATTEMPTS = 12  // 12 × 3 s = 36 s max wait
-    const INTERVAL_MS = 3000
 
     async function poll() {
       if (cancelled) return
       try {
         const res = await submissionsApi.getById(eventId!)
-        const status: string = res.data?.status ?? ''
+        const status: string = (res.data?.status ?? '').toUpperCase()
         if (status === 'PUBLISHED') {
           if (!cancelled) setState('published')
           return
         }
-      } catch {
-        // submission endpoint may 404 briefly — keep polling
-      }
+      } catch { /* 404 briefly after redirect — keep going */ }
 
-      const next = attempts + 1
-      setAttempts(next)
-      if (next >= MAX_ATTEMPTS) {
+      attemptRef.current += 1
+      if (attemptRef.current >= MAX) {
         if (!cancelled) setState('timeout')
         return
       }
-      setTimeout(poll, INTERVAL_MS)
+      setTimeout(poll, INTERVAL)
     }
 
     poll()
     return () => { cancelled = true }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [eventId])
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Nav />
       <div className="max-w-lg mx-auto pt-20 px-4">
+
         {state === 'polling' && (
           <Card>
             <CardHeader className="text-center">
@@ -77,7 +82,7 @@ function SuccessContent() {
               <CardTitle>Publishing your event…</CardTitle>
             </CardHeader>
             <CardContent className="text-center text-sm text-gray-500">
-              Payment confirmed. We're activating your listing now — this only takes a moment.
+              Payment confirmed. Activating your listing — this only takes a moment.
             </CardContent>
           </Card>
         )}
@@ -90,21 +95,8 @@ function SuccessContent() {
               </div>
               <CardTitle>Your event is live!</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4 text-center">
-              <p className="text-sm text-gray-600">
-                Your event has been published to the First in Dallas events calendar.
-              </p>
-              <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
-                <Button asChild>
-                  <Link href="/dashboard">
-                    <Calendar className="mr-2 h-4 w-4" />
-                    View my events
-                  </Link>
-                </Button>
-                <Button variant="outline" asChild>
-                  <Link href="/submit">Submit another event</Link>
-                </Button>
-              </div>
+            <CardContent className="text-center text-sm text-gray-500">
+              Taking you to your dashboard…
             </CardContent>
           </Card>
         )}
@@ -115,24 +107,14 @@ function SuccessContent() {
               <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-amber-100">
                 <Check className="h-7 w-7 text-amber-600" />
               </div>
-              <CardTitle>Payment received — publishing in progress</CardTitle>
+              <CardTitle>Payment received</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4 text-center">
-              <p className="text-sm text-gray-600">
-                Your payment was successful. Your event is being activated and should appear in the
-                calendar within a few minutes. Check your dashboard for the updated status.
-              </p>
-              <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
-                <Button asChild>
-                  <Link href="/dashboard">
-                    <Calendar className="mr-2 h-4 w-4" />
-                    View my events
-                  </Link>
-                </Button>
-              </div>
+            <CardContent className="text-center text-sm text-gray-500">
+              Your event is being activated. Taking you to your dashboard…
             </CardContent>
           </Card>
         )}
+
       </div>
     </div>
   )

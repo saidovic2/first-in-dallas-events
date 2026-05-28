@@ -12,6 +12,17 @@ router = APIRouter()
 
 WP_BASE_URL = "https://firstindallas.com"
 
+
+def _safe_url(url: Optional[str]) -> Optional[str]:
+    """Ensure URL has a protocol so it's never treated as a relative path."""
+    if not url:
+        return None
+    url = url.strip()
+    if url.startswith("http://") or url.startswith("https://"):
+        return url
+    return f"https://{url}"
+
+
 def _serialize_submission(e, admin: bool = False) -> dict:
     """Shared serializer for organizer submissions returned to hub and admin."""
     wp_url = f"{WP_BASE_URL}/?p={e.wp_post_id}" if e.wp_post_id else None
@@ -24,7 +35,7 @@ def _serialize_submission(e, admin: bool = False) -> dict:
         "start_at": e.start_at.isoformat() if e.start_at else None,
         "end_at": e.end_at.isoformat() if e.end_at else None,
         "status": e.status.lower(),
-        "source_url": e.source_url,
+        "source_url": _safe_url(e.source_url),
         "wp_url": wp_url,                         # firstindallas.com event page (once published to WP)
         "image_url": e.image_url,
         "price_tier": e.price_tier,
