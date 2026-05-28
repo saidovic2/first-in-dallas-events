@@ -225,15 +225,3 @@ async def get_all_submissions_admin(
     ]
 
 
-@router.get("/pending")
-async def get_pending_submissions(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """Get all pending submissions for admin review"""
-    events = db.query(Event).filter(
-        Event.status == "PENDING",
-        Event.source_type == "organizer_submission"
-    ).order_by(Event.created_at.desc()).all()
-
-    return events
