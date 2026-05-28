@@ -57,9 +57,9 @@ async def stripe_webhook(
 
     # ── Verify Stripe signature ───────────────────────────────────────────────
     try:
-        stripe.api_key = settings.STRIPE_SECRET_KEY
+        stripe.api_key = settings.STRIPE_SECRET_KEY.strip()
         event = stripe.Webhook.construct_event(
-            payload, stripe_signature, settings.STRIPE_WEBHOOK_SECRET
+            payload, stripe_signature, settings.STRIPE_WEBHOOK_SECRET.strip()
         )
     except stripe.SignatureVerificationError:
         logger.warning("Stripe webhook signature verification failed")

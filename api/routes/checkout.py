@@ -73,7 +73,7 @@ async def create_checkout_session(
                    "Set price_... IDs (not prod_... Product IDs) in env vars.",
         )
 
-    stripe.api_key = settings.STRIPE_SECRET_KEY
+    stripe.api_key = settings.STRIPE_SECRET_KEY.strip()
 
     # ── Build line items ──────────────────────────────────────────────────────
     line_items = []
