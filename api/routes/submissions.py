@@ -10,7 +10,7 @@ from models.event import Event
 
 router = APIRouter()
 
-WP_BASE_URL = "https://firstindallas.com"
+WP_BASE_URL = "https://cms.firstindallas.com"
 
 
 def _safe_url(url: Optional[str]) -> Optional[str]:
