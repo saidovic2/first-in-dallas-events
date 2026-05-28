@@ -13,7 +13,7 @@ import Image from 'next/image'
 export default function SubmissionsPage() {
   const [allSubmissions, setAllSubmissions] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState<'all' | 'pending' | 'published' | 'rejected'>('pending')
+  const [filter, setFilter] = useState<'all' | 'pending' | 'published' | 'rejected'>('all')
   const [acting, setActing] = useState<number | null>(null)
   const searchParams = useSearchParams()
   const organizerFilter = searchParams.get('organizer')
@@ -192,10 +192,11 @@ export default function SubmissionsPage() {
                     </div>
 
                     <div className="flex items-center gap-3">
-                      {submission.source_url && (
-                        <a href={submission.source_url} target="_blank" rel="noopener noreferrer"
+                      {(submission.wp_url || submission.source_url) && (
+                        <a href={submission.wp_url || submission.source_url} target="_blank" rel="noopener noreferrer"
                           className="text-sm text-blue-600 hover:text-blue-700 flex items-center">
-                          <ExternalLink className="h-4 w-4 mr-1" />View Event Page
+                          <ExternalLink className="h-4 w-4 mr-1" />
+                          {submission.wp_url ? 'View on First in Dallas' : 'View Event Page'}
                         </a>
                       )}
 

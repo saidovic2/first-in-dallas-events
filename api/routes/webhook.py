@@ -24,11 +24,11 @@ from datetime import datetime, timezone
 from decimal import Decimal
 
 import stripe
-from fastapi import APIRouter, Depends, Header, HTTPException, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from config import settings
-from database import get_db
+from database import get_db, SessionLocal
 from models.event import Event
 from models.featured_slot import FeaturedSlot
 from pricing import STRIPE_PRODUCT_TAG, FEATURED_PRICE_USD
@@ -40,6 +40,7 @@ router = APIRouter()
 @router.post("/webhook")
 async def stripe_webhook(
     request: Request,
+    background_tasks: BackgroundTasks,
     stripe_signature: str = Header(None, alias="stripe-signature"),
     db: Session = Depends(get_db),
 ):
@@ -73,7 +74,9 @@ async def stripe_webhook(
 
     # ── Route by event type ───────────────────────────────────────────────────
     if event_type == "checkout.session.completed":
-        _handle_checkout_completed(event["data"]["object"], db)
+        published_event_id = _handle_checkout_completed(event["data"]["object"], db)
+        if published_event_id:
+            background_tasks.add_task(_publish_to_wordpress_background, published_event_id)
 
     elif event_type in ("customer.subscription.updated", "customer.subscription.deleted"):
         _handle_subscription_event(event_type, event["data"]["object"])
@@ -86,8 +89,9 @@ async def stripe_webhook(
 
 # ── Handlers ──────────────────────────────────────────────────────────────────
 
-def _handle_checkout_completed(session: dict, db: Session) -> None:
-    """Flip event PENDING → PUBLISHED; create FeaturedSlot if purchased."""
+def _handle_checkout_completed(session: dict, db: Session) -> int | None:
+    """Flip event PENDING → PUBLISHED; create FeaturedSlot if purchased.
+    Returns the event_id so the caller can trigger WordPress publish."""
     metadata = session.get("metadata") or {}
 
     # FIRST CHECK — ignore foreign Stripe events (directory, etc.)
@@ -150,16 +154,37 @@ def _handle_checkout_completed(session: dict, db: Session) -> None:
             "checkout.session.completed: event_id=%s published; featured=%s plan=%s",
             event_id, featured, plan,
         )
+        return event_id  # caller will trigger WP publish as background task
 
     except Exception as exc:
-        # Roll back the entire transaction so we don't leave event published-but-unfeatured
-        # when the organizer paid for featured.
         db.rollback()
         logger.error(
             "checkout.session.completed: DB write failed for event_id=%s — rolled back: %s",
             event_id, exc,
         )
         raise HTTPException(status_code=500, detail="DB write failed — Stripe will retry")
+
+
+async def _publish_to_wordpress_background(event_id: int) -> None:
+    """Background task: publish paid event to WordPress and save wp_post_id."""
+    db = SessionLocal()
+    try:
+        event = db.query(Event).filter(Event.id == event_id).first()
+        if not event:
+            logger.error("WP background publish: event_id=%s not found", event_id)
+            return
+        if event.wp_post_id:
+            logger.info("WP background publish: event_id=%s already has wp_post_id=%s", event_id, event.wp_post_id)
+            return
+        from utils.wordpress import publish_to_wordpress
+        wp_post_id = await publish_to_wordpress(event, auto_enhance=True)
+        event.wp_post_id = wp_post_id
+        db.commit()
+        logger.info("WP background publish: event_id=%s → wp_post_id=%s", event_id, wp_post_id)
+    except Exception as exc:
+        logger.error("WP background publish failed for event_id=%s: %s", event_id, exc)
+    finally:
+        db.close()
 
 
 def _handle_subscription_event(event_type: str, subscription: dict) -> None:

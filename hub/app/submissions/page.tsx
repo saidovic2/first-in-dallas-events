@@ -218,14 +218,14 @@ function SubmissionsContent() {
                         {/* Published Event - Show link and live status */}
                         {submission.status === 'published' && (
                           <>
-                            {submission.source_url && (
+                            {(submission.wp_url || submission.source_url) && (
                               <a
-                                href={submission.source_url}
+                                href={submission.wp_url || submission.source_url}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-sm text-primary-600 hover:text-primary-700 flex items-center"
                               >
-                                View Event Page
+                                View on First in Dallas
                                 <ExternalLink className="h-3.5 w-3.5 ml-1" />
                               </a>
                             )}

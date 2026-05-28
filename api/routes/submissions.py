@@ -10,6 +10,37 @@ from models.event import Event
 
 router = APIRouter()
 
+WP_BASE_URL = "https://firstindallas.com"
+
+def _serialize_submission(e, admin: bool = False) -> dict:
+    """Shared serializer for organizer submissions returned to hub and admin."""
+    wp_url = f"{WP_BASE_URL}/?p={e.wp_post_id}" if e.wp_post_id else None
+    d = {
+        "id": e.id,
+        "title": e.title,
+        "city": e.city,
+        "venue": e.venue,
+        "description": e.description,
+        "start_at": e.start_at.isoformat() if e.start_at else None,
+        "end_at": e.end_at.isoformat() if e.end_at else None,
+        "status": e.status.lower(),
+        "source_url": e.source_url,
+        "wp_url": wp_url,                         # firstindallas.com event page (once published to WP)
+        "image_url": e.image_url,
+        "price_tier": e.price_tier,
+        "is_featured": e.is_featured,
+        "created_at": e.created_at.isoformat() if e.created_at else None,
+    }
+    if admin:
+        d.update({
+            "address": e.address,
+            "price_amount": float(e.price_amount) if e.price_amount else None,
+            "organizer_id": e.organizer_id,
+            "organizer_email": e.organizer_email,
+        })
+    return d
+
+
 class EventSubmissionCreate(BaseModel):
     title: str
     primary_url: Optional[str] = None
@@ -108,24 +139,7 @@ async def get_organizer_submissions(
         Event.organizer_id == organizer_id,
     ).order_by(Event.created_at.desc()).all()
 
-    return [
-        {
-            "id": e.id,
-            "title": e.title,
-            "city": e.city,
-            "venue": e.venue,
-            "description": e.description,
-            "start_at": e.start_at.isoformat() if e.start_at else None,
-            "end_at": e.end_at.isoformat() if e.end_at else None,
-            "status": e.status.lower(),   # normalize: "PUBLISHED" → "published"
-            "source_url": e.source_url,
-            "image_url": e.image_url,
-            "price_tier": e.price_tier,
-            "is_featured": e.is_featured,
-            "created_at": e.created_at.isoformat() if e.created_at else None,
-        }
-        for e in events
-    ]
+    return [_serialize_submission(e) for e in events]
 
 @router.patch("/{submission_id}/approve")
 async def approve_submission(
@@ -201,27 +215,6 @@ async def get_all_submissions_admin(
         q = q.filter(Event.status == status.upper())
     events = q.order_by(Event.created_at.desc()).all()
 
-    return [
-        {
-            "id": e.id,
-            "title": e.title,
-            "city": e.city,
-            "venue": e.venue,
-            "address": e.address,
-            "description": e.description,
-            "start_at": e.start_at.isoformat() if e.start_at else None,
-            "end_at": e.end_at.isoformat() if e.end_at else None,
-            "status": e.status.lower(),
-            "source_url": e.source_url,
-            "image_url": e.image_url,
-            "price_tier": e.price_tier,
-            "price_amount": float(e.price_amount) if e.price_amount else None,
-            "is_featured": e.is_featured,
-            "organizer_id": e.organizer_id,
-            "organizer_email": e.organizer_email,
-            "created_at": e.created_at.isoformat() if e.created_at else None,
-        }
-        for e in events
-    ]
+    return [_serialize_submission(e, admin=True) for e in events]
 
 
