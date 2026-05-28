@@ -120,9 +120,9 @@ async def create_checkout_session(
     # ── Create session ────────────────────────────────────────────────────────
     try:
         session = stripe.checkout.Session.create(**session_kwargs)
-    except stripe.error.StripeError as exc:
+    except Exception as exc:
         logger.error("Stripe session creation failed: %s", exc)
-        raise HTTPException(status_code=502, detail=f"Stripe error: {exc.user_message or str(exc)}")
+        raise HTTPException(status_code=502, detail=f"Stripe error: {str(exc)}")
 
     logger.info(
         "Checkout session created: session=%s event_id=%s plan=%s featured=%s",
