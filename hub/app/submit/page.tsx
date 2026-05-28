@@ -29,12 +29,14 @@ function EventPreviewCard({
   startDate,
   venue,
   city,
+  imageUrl,
   featured = false,
 }: {
   title: string
   startDate: string
   venue: string
   city: string
+  imageUrl?: string
   featured?: boolean
 }) {
   const displayDate = startDate
@@ -45,12 +47,18 @@ function EventPreviewCard({
 
   return (
     <div
-      className={`rounded-lg border p-3 text-sm ${
+      className={`rounded-lg border overflow-hidden text-sm ${
         featured
           ? 'border-amber-400 bg-amber-50 shadow-md'
           : 'border-gray-200 bg-white'
       }`}
     >
+      {imageUrl && (
+        <div className="w-full h-24 bg-gray-100">
+          <img src={imageUrl} alt="" className="w-full h-full object-cover" />
+        </div>
+      )}
+      <div className="p-3">
       {featured && (
         <div className="flex items-center gap-1 mb-2">
           <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
@@ -72,6 +80,7 @@ function EventPreviewCard({
           <span className="text-xs">{[venue, city].filter(Boolean).join(', ')}</span>
         </div>
       )}
+      </div>
     </div>
   )
 }
@@ -566,6 +575,7 @@ export default function SubmitPage() {
                         startDate={formData.start_date}
                         venue={formData.venue}
                         city={formData.city}
+                        imageUrl={imagePreview || formData.image_url}
                       />
                     </div>
                     <div>
@@ -575,6 +585,7 @@ export default function SubmitPage() {
                         startDate={formData.start_date}
                         venue={formData.venue}
                         city={formData.city}
+                        imageUrl={imagePreview || formData.image_url}
                         featured
                       />
                     </div>
