@@ -14,6 +14,22 @@ app = FastAPI(
 async def startup_event():
     Base.metadata.create_all(bind=engine)
     print("✅ Database tables created/verified")
+
+    # Add columns that may not exist in older deployments (idempotent)
+    from sqlalchemy import text
+    migrations = [
+        "ALTER TABLE events ADD COLUMN IF NOT EXISTS organizer_id VARCHAR",
+        "ALTER TABLE events ADD COLUMN IF NOT EXISTS organizer_email VARCHAR",
+        "CREATE INDEX IF NOT EXISTS ix_events_organizer_id ON events (organizer_id)",
+    ]
+    try:
+        with engine.connect() as conn:
+            for sql in migrations:
+                conn.execute(text(sql))
+            conn.commit()
+        print("✅ Column migrations applied")
+    except Exception as e:
+        print(f"⚠️  Column migration warning: {e}")
     
     # Start automated scheduler
     try:

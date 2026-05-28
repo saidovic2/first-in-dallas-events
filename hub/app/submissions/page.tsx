@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { submissionsApi } from '@/lib/api'
 import { Nav } from '@/components/layout/nav'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -42,15 +43,8 @@ function SubmissionsContent() {
 
   const loadSubmissions = async (userId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('event_submissions')
-        .select('*')
-        .eq('organizer_id', userId)
-        .order('created_at', { ascending: false })
-
-      if (error) throw error
-
-      setSubmissions(data || [])
+      const res = await submissionsApi.getByOrganizer(userId)
+      setSubmissions(res.data || [])
     } catch (error) {
       console.error('Error loading submissions:', error)
     }
@@ -157,12 +151,12 @@ function SubmissionsContent() {
                               </svg>
                               {submission.city || 'Location TBD'}
                             </span>
-                            {submission.start_date && (
+                            {submission.start_at && (
                               <span className="flex items-center">
                                 <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                 </svg>
-                                {formatDateTime(submission.start_date)}
+                                {formatDateTime(submission.start_at)}
                               </span>
                             )}
                           </div>
@@ -179,16 +173,18 @@ function SubmissionsContent() {
                       {/* Submission Details */}
                       <div className="flex flex-wrap items-center gap-4 text-sm mb-3">
                         <span className="text-gray-600">
-                          Type: <span className="font-medium capitalize">{submission.submission_type}</span>
-                        </span>
-                        <span className="text-gray-400">•</span>
-                        <span className="text-gray-600">
                           Submitted: {new Date(submission.created_at).toLocaleDateString()}
                         </span>
-                        {submission.format && (
+                        {submission.price_tier && (
                           <>
                             <span className="text-gray-400">•</span>
-                            <span className="text-gray-600 capitalize">{submission.format}</span>
+                            <span className="text-gray-600 capitalize">{submission.price_tier}</span>
+                          </>
+                        )}
+                        {submission.is_featured && (
+                          <>
+                            <span className="text-gray-400">•</span>
+                            <span className="text-amber-600 font-medium">Featured</span>
                           </>
                         )}
                       </div>
@@ -222,9 +218,9 @@ function SubmissionsContent() {
                         {/* Published Event - Show link and live status */}
                         {submission.status === 'published' && (
                           <>
-                            {submission.primary_url && (
+                            {submission.source_url && (
                               <a
-                                href={submission.primary_url}
+                                href={submission.source_url}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-sm text-primary-600 hover:text-primary-700 flex items-center"

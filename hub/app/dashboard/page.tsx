@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { submissionsApi } from '@/lib/api'
 import { Nav } from '@/components/layout/nav'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -39,21 +40,14 @@ export default function DashboardPage() {
 
   const loadStats = async (userId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('event_submissions')
-        .select('status')
-        .eq('organizer_id', userId)
-
-      if (error) throw error
-
-      if (data) {
-        setStats({
-          total: data.length,
-          pending: data.filter(e => e.status === 'pending').length,
-          published: data.filter(e => e.status === 'published').length,
-          rejected: data.filter(e => e.status === 'rejected').length,
-        })
-      }
+      const res = await submissionsApi.getByOrganizer(userId)
+      const data: { status: string }[] = res.data || []
+      setStats({
+        total: data.length,
+        pending: data.filter(e => e.status === 'pending').length,
+        published: data.filter(e => e.status === 'published').length,
+        rejected: data.filter(e => e.status === 'rejected').length,
+      })
     } catch (error) {
       console.error('Error loading stats:', error)
     }

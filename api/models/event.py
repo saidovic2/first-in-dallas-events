@@ -51,6 +51,10 @@ class Event(Base):
     status = Column(String, default="DRAFT", nullable=False, index=True)
     wp_post_id = Column(Integer)
     
+    # Organizer portal fields
+    organizer_id = Column(String, index=True)
+    organizer_email = Column(String)
+
     # Featured events fields (migration has run - tables exist!)
     is_featured = Column(Boolean, default=False, index=True)
     featured_tier = Column(String(20))

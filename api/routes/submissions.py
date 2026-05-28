@@ -69,6 +69,8 @@ async def create_submission(
             status="PENDING",   # Submissions start PENDING; payment webhook flips to PUBLISHED
             source_type="organizer_submission",
             fid_hash=fid_hash,
+            organizer_id=submission.organizer_id,
+            organizer_email=submission.organizer_email,
             # category intentionally NOT set from submission_type — organizers can set it later
         )
 
@@ -102,14 +104,30 @@ async def get_organizer_submissions(
     organizer_id: str,
     db: Session = Depends(get_db)
 ):
-    """Get all submissions for an organizer (by organizer_id from Supabase)"""
-    # Since we don't have organizer_id column in events table yet,
-    # return all organizer submissions for now
+    """Get all submissions for an organizer (filtered by Supabase user ID)"""
     events = db.query(Event).filter(
-        Event.source_type == "organizer_submission"
+        Event.source_type == "organizer_submission",
+        Event.organizer_id == organizer_id,
     ).order_by(Event.created_at.desc()).all()
-    
-    return events
+
+    return [
+        {
+            "id": e.id,
+            "title": e.title,
+            "city": e.city,
+            "venue": e.venue,
+            "description": e.description,
+            "start_at": e.start_at.isoformat() if e.start_at else None,
+            "end_at": e.end_at.isoformat() if e.end_at else None,
+            "status": e.status.lower(),   # normalize: "PUBLISHED" → "published"
+            "source_url": e.source_url,
+            "image_url": e.image_url,
+            "price_tier": e.price_tier,
+            "is_featured": e.is_featured,
+            "created_at": e.created_at.isoformat() if e.created_at else None,
+        }
+        for e in events
+    ]
 
 @router.patch("/{submission_id}/approve")
 async def approve_submission(
