@@ -45,6 +45,15 @@ async def create_submission(
             f"{submission.title}{submission.start_date}{submission.organizer_id}".encode()
         ).hexdigest()
 
+        # Idempotent: if this exact submission already exists as PENDING, return it
+        existing = db.query(Event).filter(Event.fid_hash == fid_hash).first()
+        if existing:
+            return {
+                "id": existing.id,
+                "status": existing.status.lower(),
+                "message": "Existing submission found.",
+            }
+
         event = Event(
             title=submission.title,
             source_url=submission.primary_url or "",   # NOT NULL — default empty when no URL
@@ -54,7 +63,7 @@ async def create_submission(
             start_at=datetime.fromisoformat(submission.start_date.replace('Z', '+00:00')),
             end_at=datetime.fromisoformat(submission.end_date.replace('Z', '+00:00')) if submission.end_date else None,
             price_amount=submission.price,
-            price_tier=submission.price_tier.upper(),
+            price_tier=submission.price_tier.lower(),  # Enum values are lowercase: "free"/"paid"
             image_url=submission.image_url,
             description=submission.description,
             status="PENDING",   # Submissions start PENDING; payment webhook flips to PUBLISHED
@@ -62,11 +71,11 @@ async def create_submission(
             fid_hash=fid_hash,
             # category intentionally NOT set from submission_type — organizers can set it later
         )
-        
+
         db.add(event)
         db.commit()
         db.refresh(event)
-        
+
         return {
             "id": event.id,
             "status": "pending",
