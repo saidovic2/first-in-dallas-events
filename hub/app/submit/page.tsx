@@ -76,6 +76,25 @@ function EventPreviewCard({
   )
 }
 
+interface FormData {
+  title: string
+  primary_url: string
+  format: 'in-person' | 'online' | 'hybrid'
+  country: string
+  venue: string
+  address: string
+  city: string
+  state: string
+  zip_code: string
+  start_date: string
+  end_date: string
+  price: string
+  price_tier: 'free' | 'paid'
+  image_url: string
+  description: string
+  organizer_contact: string
+}
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function SubmitPage() {
   const router = useRouter()
@@ -84,34 +103,76 @@ export default function SubmitPage() {
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   // Event form data (steps 1–2)
-  const [formData, setFormData] = useState({
-    title: '',
-    primary_url: '',
-    format: 'in-person' as 'in-person' | 'online' | 'hybrid',
-    country: 'USA',
-    venue: '',
-    address: '',
-    city: '',
-    state: '',
-    zip_code: '',
-    start_date: '',
-    end_date: '',
-    price: '',
-    price_tier: 'free' as 'free' | 'paid',
-    image_url: '',
-    description: '',
-    organizer_contact: '',
+  const [formData, setFormData] = useState<FormData>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('fid_submit_form')
+      if (saved) try { return JSON.parse(saved) as FormData } catch {}
+    }
+    return {
+      title: '',
+      primary_url: '',
+      format: 'in-person',
+      country: 'USA',
+      venue: '',
+      address: '',
+      city: '',
+      state: '',
+      zip_code: '',
+      start_date: '',
+      end_date: '',
+      price: '',
+      price_tier: 'free',
+      image_url: '',
+      description: '',
+      organizer_contact: '',
+    }
   })
 
-  const [imagePreview, setImagePreview] = useState('')
+  const [imagePreview, setImagePreview] = useState(() => {
+    if (typeof window !== 'undefined') return localStorage.getItem('fid_submit_image') || ''
+    return ''
+  })
   const [uploading, setUploading] = useState(false)
 
   // Payment step state
-  const [plan, setPlan] = useState<'single' | 'unlimited'>('single')
-  const [featuredChecked, setFeaturedChecked] = useState(false)
+  const [plan, setPlan] = useState<'single' | 'unlimited'>(() => {
+    if (typeof window !== 'undefined') return (localStorage.getItem('fid_submit_plan') as 'single' | 'unlimited') || 'single'
+    return 'single'
+  })
+  const [featuredChecked, setFeaturedChecked] = useState(() => {
+    if (typeof window !== 'undefined') return localStorage.getItem('fid_submit_featured') === 'true'
+    return false
+  })
   const [pendingEventId, setPendingEventId] = useState<number | null>(null)
   const [savingPending, setSavingPending] = useState(false)
   const [checkingOut, setCheckingOut] = useState(false)
+
+  // Restore step from localStorage
+  useEffect(() => {
+    const savedStep = localStorage.getItem('fid_submit_step')
+    if (savedStep) setCurrentStep(Math.min(parseInt(savedStep), 3) || 1)
+  }, [])
+
+  // Autosave form data to localStorage
+  useEffect(() => {
+    localStorage.setItem('fid_submit_form', JSON.stringify(formData))
+  }, [formData])
+
+  useEffect(() => {
+    localStorage.setItem('fid_submit_step', String(currentStep))
+  }, [currentStep])
+
+  useEffect(() => {
+    localStorage.setItem('fid_submit_image', imagePreview)
+  }, [imagePreview])
+
+  useEffect(() => {
+    localStorage.setItem('fid_submit_plan', plan)
+  }, [plan])
+
+  useEffect(() => {
+    localStorage.setItem('fid_submit_featured', String(featuredChecked))
+  }, [featuredChecked])
 
   useEffect(() => {
     checkUser()
@@ -215,6 +276,12 @@ export default function SubmitPage() {
         featured: featuredChecked,
         event_id: eventId!,
       })
+      // Clear saved draft — submission is committed
+      localStorage.removeItem('fid_submit_form')
+      localStorage.removeItem('fid_submit_step')
+      localStorage.removeItem('fid_submit_image')
+      localStorage.removeItem('fid_submit_plan')
+      localStorage.removeItem('fid_submit_featured')
       // Redirect to Stripe — single checkout, single charge
       window.location.href = res.data.checkout_url
     } catch (err: any) {
