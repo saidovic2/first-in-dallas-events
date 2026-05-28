@@ -184,28 +184,7 @@ export default function SubmitPage() {
 
   const handleNext = async () => {
     if (currentStep === 1 && !validateStep1()) return
-    if (currentStep === 2) {
-      if (!validateStep2()) return
-      // Save PENDING event before showing the payment gate so the form survives abandonment
-      setSavingPending(true)
-      try {
-        const res = await submissionsApi.create({
-          ...formData,
-          price: formData.price ? parseFloat(formData.price) : undefined,
-          organizer_id: user.id,
-          organizer_email: user.email!,
-          submission_type: 'paid',  // all hub submissions are paid
-        })
-        setPendingEventId(res.data.id)
-        setCurrentStep(3)
-        window.scrollTo({ top: 0, behavior: 'smooth' })
-      } catch (err: any) {
-        setErrors({ submit: err.response?.data?.detail || 'Failed to save event. Please try again.' })
-      } finally {
-        setSavingPending(false)
-      }
-      return
-    }
+    if (currentStep === 2 && !validateStep2()) return
     if (currentStep < 3) {
       setCurrentStep(currentStep + 1)
       window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -214,18 +193,32 @@ export default function SubmitPage() {
 
   // ── Checkout ───────────────────────────────────────────────────────────────
   const handleCheckout = async () => {
-    if (!pendingEventId) { setErrors({ submit: 'Event not saved yet. Please go back and try again.' }); return }
     setCheckingOut(true)
+    setErrors({})
     try {
+      // Save event as PENDING first (if not already saved)
+      let eventId = pendingEventId
+      if (!eventId) {
+        const res = await submissionsApi.create({
+          ...formData,
+          price: formData.price ? parseFloat(formData.price) : undefined,
+          organizer_id: user.id,
+          organizer_email: user.email!,
+          submission_type: 'paid',
+        })
+        eventId = res.data.id
+        setPendingEventId(eventId)
+      }
+
       const res = await checkoutApi.createSession({
         plan,
         featured: featuredChecked,
-        event_id: pendingEventId,
+        event_id: eventId!,
       })
       // Redirect to Stripe — single checkout, single charge
       window.location.href = res.data.checkout_url
     } catch (err: any) {
-      setErrors({ submit: err.response?.data?.detail || 'Could not start checkout. Please try again.' })
+      setErrors({ submit: err.response?.data?.detail || err.message || 'Could not start checkout. Please try again.' })
       setCheckingOut(false)
     }
   }
@@ -571,18 +564,14 @@ export default function SubmitPage() {
             {/* ── Navigation ─────────────────────────────────────────────── */}
             <div className="flex items-center justify-between mt-8 pt-6 border-t">
               <Button type="button" variant="outline" onClick={handleBack}
-                disabled={currentStep === 1 || savingPending || checkingOut}>
+                disabled={currentStep === 1 || checkingOut}>
                 <ChevronLeft className="w-4 h-4 mr-2" />
                 Back
               </Button>
 
               {currentStep < 3 ? (
-                <Button type="button" onClick={handleNext} disabled={savingPending}>
-                  {savingPending ? (
-                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving…</>
-                  ) : (
-                    <>Next <ChevronRight className="w-4 h-4 ml-2" /></>
-                  )}
+                <Button type="button" onClick={handleNext}>
+                  Next <ChevronRight className="w-4 h-4 ml-2" />
                 </Button>
               ) : (
                 <Button type="button" onClick={handleCheckout} disabled={checkingOut}
