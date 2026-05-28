@@ -424,55 +424,58 @@ export default function SubmitPage() {
                 {/* Plan selector */}
                 <div>
                   <h3 className="text-lg font-semibold mb-1">Choose Your Plan</h3>
-                  <p className="text-sm text-gray-500 mb-4">All plans include immediate listing on the First in Dallas events calendar.</p>
+                  <p className="text-sm text-gray-500 mb-4">Get your event in front of thousands of Dallas locals. Every plan goes live instantly.</p>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-                    {/* Single submission */}
+                    {/* Single event */}
                     <button type="button" onClick={() => setPlan('single')}
                       className={`p-5 border-2 rounded-lg text-left transition-all ${
-                        plan === 'single' ? 'border-primary-600 bg-primary-50' : 'border-gray-200 hover:border-gray-300'
+                        plan === 'single' ? 'border-primary-600 bg-primary-50 shadow-md' : 'border-gray-200 hover:border-gray-300'
                       }`}>
                       <div className="flex items-start justify-between mb-2">
                         <div>
-                          <p className="font-bold text-lg text-gray-900">Single Submission</p>
+                          <p className="font-bold text-lg text-gray-900">Single Event</p>
                           <p className="text-2xl font-extrabold text-primary-700 mt-1">${SINGLE_PRICE}</p>
-                          <p className="text-xs text-gray-500">one-time</p>
+                          <p className="text-xs text-gray-500">one-time payment</p>
                         </div>
                         <div className={`w-5 h-5 mt-1 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
                           plan === 'single' ? 'border-primary-600 bg-primary-600' : 'border-gray-300'}`}>
                           {plan === 'single' && <Check className="w-3 h-3 text-white" />}
                         </div>
                       </div>
-                      <ul className="space-y-1.5 text-sm text-gray-600 mt-3">
-                        <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-green-500 flex-shrink-0" /> This event listed on the calendar</li>
-                        <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-green-500 flex-shrink-0" /> Searchable by date, city & category</li>
-                        <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-green-500 flex-shrink-0" /> Live immediately after payment</li>
+                      <p className="text-xs text-gray-500 mb-3">Perfect for one-off events and first-time organizers.</p>
+                      <ul className="space-y-1.5 text-sm text-gray-600">
+                        <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-green-500 flex-shrink-0" /> Published on the calendar instantly</li>
+                        <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-green-500 flex-shrink-0" /> Discoverable by date, city & category</li>
+                        <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-green-500 flex-shrink-0" /> Direct link to your ticketing page</li>
                       </ul>
                     </button>
 
-                    {/* Unlimited subscription */}
+                    {/* Unlimited events */}
                     <button type="button" onClick={() => setPlan('unlimited')}
                       className={`p-5 border-2 rounded-lg text-left transition-all relative ${
-                        plan === 'unlimited' ? 'border-primary-600 bg-primary-50' : 'border-gray-200 hover:border-gray-300'
+                        plan === 'unlimited' ? 'border-primary-600 bg-primary-50 shadow-md' : 'border-gray-200 hover:border-gray-300'
                       }`}>
-                      <div className="absolute -top-px -right-px bg-primary-600 text-white text-xs font-bold px-2 py-0.5 rounded-tr-lg rounded-bl-lg">
-                        BEST VALUE
+                      <div className="absolute -top-3 left-4 bg-primary-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm">
+                        BEST FOR VENUES & PR
                       </div>
-                      <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-start justify-between mb-2 mt-2">
                         <div>
-                          <p className="font-bold text-lg text-gray-900">Unlimited Submissions</p>
+                          <p className="font-bold text-lg text-gray-900">Unlimited Events</p>
                           <p className="text-2xl font-extrabold text-primary-700 mt-1">${UNLIMITED_PRICE}<span className="text-sm font-normal text-gray-500">/mo</span></p>
-                          <p className="text-xs text-gray-500">recurring subscription</p>
+                          <p className="text-xs text-gray-500">cancel anytime, no contracts</p>
                         </div>
                         <div className={`w-5 h-5 mt-1 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
                           plan === 'unlimited' ? 'border-primary-600 bg-primary-600' : 'border-gray-300'}`}>
                           {plan === 'unlimited' && <Check className="w-3 h-3 text-white" />}
                         </div>
                       </div>
-                      <ul className="space-y-1.5 text-sm text-gray-600 mt-3">
-                        <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-green-500 flex-shrink-0" /> Unlimited event submissions per month</li>
-                        <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-green-500 flex-shrink-0" /> All calendar features included</li>
-                        <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-green-500 flex-shrink-0" /> Cancel any time</li>
+                      <p className="text-xs text-gray-500 mb-3">Ideal for venues, promoters & organizations with a full calendar.</p>
+                      <ul className="space-y-1.5 text-sm text-gray-600">
+                        <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-green-500 flex-shrink-0" /> Post as many events as you want</li>
+                        <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-green-500 flex-shrink-0" /> Priority review & faster publishing</li>
+                        <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-green-500 flex-shrink-0" /> Manage all events from one dashboard</li>
+                        <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-green-500 flex-shrink-0" /> Saves 60%+ vs. individual posts</li>
                       </ul>
                     </button>
 
@@ -481,16 +484,16 @@ export default function SubmitPage() {
 
                 {/* Featured add-on */}
                 <div>
-                  <h3 className="text-lg font-semibold mb-1">Add Featured Placement <span className="text-primary-600">+${FEATURED_PRICE}</span></h3>
+                  <h3 className="text-lg font-semibold mb-1">Want more eyes on your event? <span className="text-amber-600">+${FEATURED_PRICE}</span></h3>
                   <p className="text-sm text-gray-500 mb-4">
-                    Featured events appear at the top of the calendar — the first thing visitors see.
-                    Charged once, active until your event date.
+                    Featured events get pinned to the top of the calendar — the very first thing
+                    visitors see when they land on the page. One-time charge, active until your event date.
                   </p>
 
                   {/* Side-by-side preview with real event data */}
                   <div className="grid grid-cols-2 gap-3 mb-4">
                     <div>
-                      <p className="text-xs text-gray-400 font-medium mb-1.5 uppercase tracking-wide">Standard</p>
+                      <p className="text-xs text-gray-400 font-medium mb-1.5 uppercase tracking-wide">Standard listing</p>
                       <EventPreviewCard
                         title={formData.title}
                         startDate={formData.start_date}
@@ -499,7 +502,7 @@ export default function SubmitPage() {
                       />
                     </div>
                     <div>
-                      <p className="text-xs text-amber-600 font-medium mb-1.5 uppercase tracking-wide">Featured ★</p>
+                      <p className="text-xs text-amber-600 font-medium mb-1.5 uppercase tracking-wide">Featured listing ★</p>
                       <EventPreviewCard
                         title={formData.title}
                         startDate={formData.start_date}
@@ -521,8 +524,8 @@ export default function SubmitPage() {
                       className="w-5 h-5 accent-amber-500"
                     />
                     <div>
-                      <p className="font-semibold text-gray-900">Add Featured placement — <span className="text-amber-700">+${FEATURED_PRICE}</span></p>
-                      <p className="text-xs text-gray-500 mt-0.5">Top of calendar · Featured badge · Highlighted card</p>
+                      <p className="font-semibold text-gray-900">Yes, feature my event — <span className="text-amber-700">+${FEATURED_PRICE}</span></p>
+                      <p className="text-xs text-gray-500 mt-0.5">Pinned to top · Highlighted card · Featured badge · Maximum visibility</p>
                     </div>
                   </label>
                 </div>
@@ -531,7 +534,7 @@ export default function SubmitPage() {
                 <div className="border-t pt-6">
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-gray-700">
-                      {plan === 'single' ? 'Single submission' : 'Unlimited plan'}
+                      {plan === 'single' ? 'Single event listing' : 'Unlimited events plan'}
                     </span>
                     <span className="font-medium">
                       {plan === 'single' ? `$${SINGLE_PRICE}` : `$${UNLIMITED_PRICE}/mo`}
@@ -548,7 +551,7 @@ export default function SubmitPage() {
                     <span className="font-extrabold text-primary-700 text-xl">{totalLabel}</span>
                   </div>
                   {plan === 'unlimited' && (
-                    <p className="text-xs text-gray-400 mt-1 text-right">Then ${UNLIMITED_PRICE}/mo. Cancel any time.</p>
+                    <p className="text-xs text-gray-400 mt-1 text-right">Then ${UNLIMITED_PRICE}/mo. Cancel anytime — no questions asked.</p>
                   )}
                 </div>
 
