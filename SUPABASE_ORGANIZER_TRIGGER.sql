@@ -41,6 +41,7 @@ ALTER TABLE public.organizers ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Users can view own organizer profile"       ON public.organizers;
 DROP POLICY IF EXISTS "Users can update own organizer profile"     ON public.organizers;
 DROP POLICY IF EXISTS "Users can insert own organizer profile"     ON public.organizers;
+DROP POLICY IF EXISTS "Anon can insert organizer"                  ON public.organizers;
 DROP POLICY IF EXISTS "Service role full access to organizers"     ON public.organizers;
 
 CREATE POLICY "Users can view own organizer profile"
@@ -53,6 +54,18 @@ CREATE POLICY "Users can update own organizer profile"
   TO authenticated
   USING (auth.uid() = id)
   WITH CHECK (auth.uid() = id);
+
+-- INSERT policies: needed because Supabase Auth may execute the trigger
+-- in a context that still checks RLS despite SECURITY DEFINER
+CREATE POLICY "Users can insert own organizer profile"
+  ON public.organizers FOR INSERT
+  TO authenticated
+  WITH CHECK (auth.uid() = id);
+
+CREATE POLICY "Anon can insert organizer"
+  ON public.organizers FOR INSERT
+  TO anon
+  WITH CHECK (true);
 
 -- Service role used by the FastAPI backend (reads organizer data)
 CREATE POLICY "Service role full access to organizers"
