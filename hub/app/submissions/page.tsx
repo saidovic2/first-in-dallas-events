@@ -8,7 +8,7 @@ import { Nav } from '@/components/layout/nav'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { getStatusColor, getStatusLabel, formatDateTime } from '@/lib/utils'
+import { getStatusColor, getStatusLabel, formatDateTime, buildFidMainEventUrl } from '@/lib/utils'
 import { Clock, CheckCircle, XCircle, ExternalLink, ChevronRight, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
 
@@ -219,7 +219,7 @@ function SubmissionsContent() {
                         {submission.status === 'published' && (
                           <>
                             <a
-                              href={submission.wp_url || 'https://firstindallas.com'}
+                              href={buildFidMainEventUrl({ id: submission.id, title: submission.title })}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-sm text-primary-600 hover:text-primary-700 flex items-center"

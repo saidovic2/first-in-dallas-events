@@ -53,3 +53,21 @@ export function getStatusLabel(status: string): string {
       return status
   }
 }
+
+// Exact slug formula from fid-main lib/events/slug.ts — must stay in sync
+function slugifyTitle(title: string): string {
+  return title
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 80)
+}
+
+export function buildFidMainEventUrl(event: { id: number; title: string }): string {
+  return `https://firstindallas.com/events/${slugifyTitle(event.title)}-${event.id}/`
+}
