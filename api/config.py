@@ -42,6 +42,11 @@ class Settings(BaseSettings):
     # Hub origin — used for Stripe success/cancel redirect URLs
     HUB_URL: str = "http://localhost:3001"
 
+    # fid-main cache revalidation — POST /api/revalidate on firstindallas.com
+    # Set the same secret in fid-main's REVALIDATE_SECRET env var.
+    FID_MAIN_URL: str = "https://firstindallas.com"
+    REVALIDATE_SECRET: Optional[str] = None
+
     class Config:
         env_file = ".env"
         extra = "ignore"  # Ignore extra fields in .env

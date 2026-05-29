@@ -77,6 +77,7 @@ async def stripe_webhook(
         published_event_id = _handle_checkout_completed(event["data"]["object"], db)
         if published_event_id:
             background_tasks.add_task(_publish_to_wordpress_background, published_event_id)
+            background_tasks.add_task(_notify_fid_main_background, published_event_id)
 
     elif event_type in ("customer.subscription.updated", "customer.subscription.deleted"):
         _handle_subscription_event(event_type, event["data"]["object"])
@@ -183,6 +184,22 @@ async def _publish_to_wordpress_background(event_id: int) -> None:
         logger.info("WP background publish: event_id=%s → wp_post_id=%s", event_id, wp_post_id)
     except Exception as exc:
         logger.error("WP background publish failed for event_id=%s: %s", event_id, exc)
+    finally:
+        db.close()
+
+
+async def _notify_fid_main_background(event_id: int) -> None:
+    """Background task: bust fid-main ISR cache after event is published."""
+    db = SessionLocal()
+    try:
+        event = db.query(Event).filter(Event.id == event_id).first()
+        if not event:
+            logger.error("fid-main notify: event_id=%s not found", event_id)
+            return
+        from utils.fid_main_client import notify_fid_main_event_published
+        await notify_fid_main_event_published(event_id, event.title)
+    except Exception as exc:
+        logger.error("fid-main notify background failed for event_id=%s: %s", event_id, exc)
     finally:
         db.close()
 

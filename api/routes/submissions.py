@@ -174,19 +174,25 @@ async def approve_submission(
         from utils.wordpress import publish_to_wordpress
         print(f"📝 Auto-publishing approved submission to WordPress: {event.title}")
         wp_post_id = await publish_to_wordpress(event, auto_enhance=True)
-        
+
         # Save WordPress post ID back to event
         event.wp_post_id = wp_post_id
         db.commit()
-        
+
         print(f"✅ WordPress post created (ID: {wp_post_id})")
     except Exception as e:
         # Don't fail approval if WordPress publish fails
         print(f"⚠️ WordPress auto-publish failed: {e}")
-        # Event still approved successfully, just without WordPress post
-    
+
+    # Notify fid-main to bust ISR cache so event appears immediately
+    try:
+        from utils.fid_main_client import notify_fid_main_event_published
+        await notify_fid_main_event_published(event.id, event.title)
+    except Exception as e:
+        print(f"⚠️ fid-main revalidation failed: {e}")
+
     return {
-        "message": "Event approved and published to WordPress",
+        "message": "Event approved and published",
         "event_id": event.id,
         "wp_post_id": event.wp_post_id
     }
