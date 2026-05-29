@@ -14,7 +14,8 @@ import json
 from sqlalchemy.orm import Session
 from database import SessionLocal
 from models.event import Event
-from utils.wordpress import publish_to_wordpress
+# WordPress push removed post-cutover; api/utils/wordpress.py retained
+# if re-enabling is ever needed.
 
 # Configure logging
 logging.basicConfig(
@@ -119,21 +120,19 @@ async def auto_publish_new_events():
         
         for event in new_events:
             try:
-                # Publish to WordPress
-                wp_post_id = await publish_to_wordpress(event)
-                
-                if wp_post_id:
-                    # Update event status and wp_post_id
-                    event.status = "PUBLISHED"
-                    event.wp_post_id = wp_post_id
-                    db.commit()
-                    
-                    published_count += 1
-                    logger.info(f"  ✓ Published: {event.title[:50]} (WP ID: {wp_post_id})")
-                else:
-                    failed_count += 1
-                    logger.warning(f"  ✗ Failed: {event.title[:50]}")
-                
+                event.status = "PUBLISHED"
+                db.commit()
+
+                published_count += 1
+                logger.info(f"  ✓ Published: {event.title[:50]}")
+
+                # Notify fid-main to revalidate ISR cache
+                try:
+                    from utils.fid_main_client import notify_fid_main_event_published
+                    await notify_fid_main_event_published(event.id, event.title)
+                except Exception as notify_exc:
+                    logger.warning(f"  fid-main notify failed for {event.title[:50]}: {notify_exc}")
+
                 # Rate limiting
                 await asyncio.sleep(1)
                 

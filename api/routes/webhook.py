@@ -76,7 +76,8 @@ async def stripe_webhook(
     if event_type == "checkout.session.completed":
         published_event_id = _handle_checkout_completed(event["data"]["object"], db)
         if published_event_id:
-            background_tasks.add_task(_publish_to_wordpress_background, published_event_id)
+            # WordPress push removed post-cutover; api/utils/wordpress.py retained
+            # if re-enabling is ever needed.
             background_tasks.add_task(_notify_fid_main_background, published_event_id)
 
     elif event_type in ("customer.subscription.updated", "customer.subscription.deleted"):
@@ -164,28 +165,6 @@ def _handle_checkout_completed(session: dict, db: Session) -> int | None:
             event_id, exc,
         )
         raise HTTPException(status_code=500, detail="DB write failed — Stripe will retry")
-
-
-async def _publish_to_wordpress_background(event_id: int) -> None:
-    """Background task: publish paid event to WordPress and save wp_post_id."""
-    db = SessionLocal()
-    try:
-        event = db.query(Event).filter(Event.id == event_id).first()
-        if not event:
-            logger.error("WP background publish: event_id=%s not found", event_id)
-            return
-        if event.wp_post_id:
-            logger.info("WP background publish: event_id=%s already has wp_post_id=%s", event_id, event.wp_post_id)
-            return
-        from utils.wordpress import publish_to_wordpress
-        wp_post_id = await publish_to_wordpress(event, auto_enhance=True)
-        event.wp_post_id = wp_post_id
-        db.commit()
-        logger.info("WP background publish: event_id=%s → wp_post_id=%s", event_id, wp_post_id)
-    except Exception as exc:
-        logger.error("WP background publish failed for event_id=%s: %s", event_id, exc)
-    finally:
-        db.close()
 
 
 async def _notify_fid_main_background(event_id: int) -> None:

@@ -10,7 +10,6 @@ from models.event import Event
 from models.user import User
 from schemas.event import EventResponse, EventUpdate, EventCreate
 from utils.auth import get_current_user
-from utils.wordpress import publish_to_wordpress
 
 class BulkEventIds(BaseModel):
     event_ids: List[int]
@@ -128,24 +127,15 @@ async def create_event(
     db.commit()
     db.refresh(new_event)
     
-    # Auto-publish to WordPress if status is PUBLISHED
+    # WordPress push removed post-cutover; api/utils/wordpress.py retained
+    # if re-enabling is ever needed.
     if status == "PUBLISHED":
         try:
-            from utils.wordpress import publish_to_wordpress
-            print(f"📝 Auto-publishing to WordPress: {title}")
-            wp_post_id = await publish_to_wordpress(new_event, auto_enhance=True)
-            
-            # Save WordPress post ID back to event
-            new_event.wp_post_id = wp_post_id
-            db.commit()
-            db.refresh(new_event)
-            
-            print(f"✅ WordPress post created (ID: {wp_post_id})")
+            from utils.fid_main_client import notify_fid_main_event_published
+            await notify_fid_main_event_published(new_event.id, new_event.title)
         except Exception as e:
-            # Don't fail the entire request if WordPress publish fails
-            print(f"⚠️ WordPress auto-publish failed: {e}")
-            # Event still created successfully, just without WordPress post
-    
+            print(f"⚠️ fid-main revalidation failed: {e}")
+
     return EventResponse.model_validate(new_event)
 
 @router.get("/{event_id}", response_model=EventResponse)
@@ -253,15 +243,18 @@ async def publish_event(
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
     
+    # WordPress push removed post-cutover; api/utils/wordpress.py retained
+    # if re-enabling is ever needed.
+    event.status = "PUBLISHED"
+    db.commit()
+
     try:
-        wp_post_id = await publish_to_wordpress(event)
-        event.wp_post_id = wp_post_id
-        event.status = "published"
-        db.commit()
-        
-        return {"message": "Event published to WordPress", "wp_post_id": wp_post_id}
+        from utils.fid_main_client import notify_fid_main_event_published
+        await notify_fid_main_event_published(event.id, event.title)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to publish: {str(e)}")
+        print(f"⚠️ fid-main revalidation failed for event_id={event.id}: {e}")
+
+    return {"message": "Event published", "event_id": event.id}
 
 @router.get("/cities/list")
 async def list_cities(db: Session = Depends(get_db)):

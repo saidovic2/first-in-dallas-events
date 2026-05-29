@@ -169,20 +169,8 @@ async def approve_submission(
     db.commit()
     db.refresh(event)
     
-    # Auto-publish to WordPress
-    try:
-        from utils.wordpress import publish_to_wordpress
-        print(f"📝 Auto-publishing approved submission to WordPress: {event.title}")
-        wp_post_id = await publish_to_wordpress(event, auto_enhance=True)
-
-        # Save WordPress post ID back to event
-        event.wp_post_id = wp_post_id
-        db.commit()
-
-        print(f"✅ WordPress post created (ID: {wp_post_id})")
-    except Exception as e:
-        # Don't fail approval if WordPress publish fails
-        print(f"⚠️ WordPress auto-publish failed: {e}")
+    # WordPress push removed post-cutover; api/utils/wordpress.py retained
+    # if re-enabling is ever needed.
 
     # Notify fid-main to bust ISR cache so event appears immediately
     try:
