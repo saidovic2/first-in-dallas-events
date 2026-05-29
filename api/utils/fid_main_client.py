@@ -60,7 +60,7 @@ async def notify_fid_main_event_published(event_id: int, title: str) -> None:
     ]
 
     try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
+        async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as client:
             resp = await client.post(
                 _FID_MAIN_REVALIDATE,
                 json={"paths": paths},

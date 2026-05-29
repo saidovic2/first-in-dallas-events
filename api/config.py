@@ -44,7 +44,7 @@ class Settings(BaseSettings):
 
     # fid-main cache revalidation — POST /api/revalidate on firstindallas.com
     # Set the same secret in fid-main's REVALIDATE_SECRET env var.
-    FID_MAIN_URL: str = "https://firstindallas.com"
+    FID_MAIN_URL: str = "https://www.firstindallas.com"
     REVALIDATE_SECRET: Optional[str] = None
 
     class Config:
